@@ -39,7 +39,7 @@ DISI_Registration_Manager::amount_totals();
 
 <div class="wrap">
 
-<h1>DISI Summit Portal V0.3.2</h1>
+<h1>DISI Summit Portal V0.3.3</h1>
 
 <div class="disi-dashboard-grid">
 

@@ -1,5 +1,5 @@
 DISI Summit Portal
-Version: 0.3.2
+Version: 0.3.3
 
 This plugin manages DISI Summit 2026 registrations inside WordPress.
 
@@ -38,6 +38,9 @@ Main features:
 - Registration exports use the active type, approval status, payment status, and search filters.
 - CSV exports include stored registration, source, approval, payment, and all submitted form fields.
 - PDF exports include a complete readable detail section for every matching registration.
+- PDF exports use a polished landscape table so multiple registrations fit on each page.
+- PDF pages include the DISI logo, branded report banner, export filters, financial summary, repeating table headings, alternating rows, and page numbers.
+- Each PDF table row includes registration identity, contact, type, approval status, payment status, amount, submission date, source data, payment reference, fee breakdown, and every submitted form field.
 - CSV values are protected against spreadsheet formula execution.
 - PDF generation is bundled through FPDF 1.86 and does not require a server PDF extension.
 - The plugin applies DISI branding colors:
