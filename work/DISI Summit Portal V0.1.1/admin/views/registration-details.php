@@ -86,6 +86,27 @@ if (
     }
 }
 
+if (
+    isset($_POST['disi_resend_payment_email']) &&
+    check_admin_referer('disi_resend_payment_email_' . $id)
+) {
+    $resent = DISI_Registration_Manager::resend_approval_email($id);
+
+    if (is_wp_error($resent)) {
+        echo '
+        <div class="notice notice-error">
+            <p>' . esc_html($resent->get_error_message()) . '</p>
+        </div>
+        ';
+    } else {
+        echo '
+        <div class="notice notice-success">
+            <p>Payment email resent successfully.</p>
+        </div>
+        ';
+    }
+}
+
 $registration =
 DISI_Registration_Manager::get($id);
 
@@ -187,14 +208,16 @@ $registration->email
 
 <strong>Total Amount:</strong>
 
-<?php
+<span class="disi-money">
+&#8358;<?php
 echo esc_html(
-number_format(
-floatval($registration->total_amount ?? 0),
-2
-)
+    number_format(
+        floatval($registration->total_amount ?? 0),
+        2
+    )
 );
 ?>
+</span>
 
 </div>
 
@@ -202,11 +225,13 @@ floatval($registration->total_amount ?? 0),
 
 <strong>Payment Status:</strong>
 
-<?php
-echo esc_html(
-    ucfirst($registration->payment_status ?? 'unpaid')
-);
-?>
+<?php $payment_status = $registration->payment_status ?? 'unpaid'; ?>
+
+<span
+class="disi-payment-badge disi-payment-<?php echo esc_attr($payment_status); ?>"
+>
+<?php echo esc_html(ucfirst($payment_status)); ?>
+</span>
 
 </div>
 
@@ -484,6 +509,28 @@ endif;
         class="button"
         >
         Verify Payment
+        </button>
+    </form>
+
+<?php endif; ?>
+
+<?php if (
+    $registration->status === 'approved' &&
+    !empty($registration->paystack_authorization_url)
+) : ?>
+
+    <form method="post" style="display:inline-block;">
+        <?php
+        wp_nonce_field(
+            'disi_resend_payment_email_' . $registration->id
+        );
+        ?>
+        <button
+        type="submit"
+        name="disi_resend_payment_email"
+        class="button disi-email-btn"
+        >
+        Resend Payment Email
         </button>
     </form>
 

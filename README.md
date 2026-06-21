@@ -5,10 +5,10 @@ payment notifications, and form-provider integration.
 
 ## Latest Release
 
-Version `0.3.0`
+Version `0.3.1`
 
 Installable package:
-`outputs/disi-summit-portal-v0.3.0.zip`
+`outputs/disi-summit-portal-v0.3.1.zip`
 
 ## Source
 

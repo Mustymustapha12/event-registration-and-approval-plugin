@@ -36,7 +36,7 @@ DISI_Registration_Manager::payment_count(
 
 <div class="wrap">
 
-<h1>DISI Summit Portal V0.3.0</h1>
+<h1>DISI Summit Portal V0.3.1</h1>
 
 <div class="disi-dashboard-grid">
 

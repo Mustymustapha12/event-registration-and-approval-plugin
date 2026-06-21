@@ -19,6 +19,20 @@ class DISI_Form_Listener {
             'fluentform/submission_deleted',
             [$this, 'delete_fluentforms'],
             10,
+            1
+        );
+
+        add_action(
+            'fluentform/after_deleting_submissions',
+            [$this, 'delete_fluentforms_bulk'],
+            10,
+            2
+        );
+
+        add_action(
+            'fluentform/after_submission_status_update',
+            [$this, 'delete_trashed_fluentforms'],
+            10,
             2
         );
 
@@ -89,22 +103,44 @@ class DISI_Form_Listener {
         );
     }
 
-    public function delete_fluentforms(
-        $entry_id,
-        $form_id = 0
-    ) {
+    public function delete_fluentforms($entry_id) {
 
         $entry_id = $this->extract_id(
             $entry_id,
             ['id', 'entry_id', 'submission_id']
         );
-        $form_id = $this->extract_id($form_id, ['id', 'form_id']);
 
         DISI_Registration_Manager::delete_by_source_entry(
             'Fluent Forms',
-            $form_id,
+            0,
             $entry_id
         );
+    }
+
+    public function delete_fluentforms_bulk(
+        $entry_ids,
+        $form_id = 0
+    ) {
+
+        foreach ((array) $entry_ids as $entry_id) {
+            DISI_Registration_Manager::delete_by_source_entry(
+                'Fluent Forms',
+                $form_id,
+                $entry_id
+            );
+        }
+    }
+
+    public function delete_trashed_fluentforms(
+        $entry_id,
+        $status
+    ) {
+
+        if ($status !== 'trashed') {
+            return;
+        }
+
+        $this->delete_fluentforms($entry_id);
     }
 
     public function capture_forminator(

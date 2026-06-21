@@ -274,6 +274,7 @@ class DISI_Registration_Manager {
         $per_page = 20,
         $type = '',
         $status = '',
+        $payment_status = '',
         $search = ''
     ) {
 
@@ -296,6 +297,14 @@ class DISI_Registration_Manager {
             $where .= $wpdb->prepare(
                 " AND status = %s",
                 $status
+            );
+        }
+
+        if (!empty($payment_status)) {
+
+            $where .= $wpdb->prepare(
+                " AND payment_status = %s",
+                $payment_status
             );
         }
 
@@ -339,6 +348,7 @@ class DISI_Registration_Manager {
     public static function total_count(
         $type = '',
         $status = '',
+        $payment_status = '',
         $search = ''
     ) {
 
@@ -361,6 +371,14 @@ class DISI_Registration_Manager {
             $where .= $wpdb->prepare(
                 " AND status=%s",
                 $status
+            );
+        }
+
+        if (!empty($payment_status)) {
+
+            $where .= $wpdb->prepare(
+                " AND payment_status=%s",
+                $payment_status
             );
         }
 
@@ -517,6 +535,19 @@ class DISI_Registration_Manager {
             return $transaction;
         }
 
+        $transaction_status = sanitize_text_field(
+            $transaction['status'] ?? ''
+        );
+
+        if ($transaction_status !== 'success') {
+            return new WP_Error(
+                'payment_not_paid',
+                'This transaction is not paid yet. Paystack status: ' .
+                ($transaction_status ?: 'unknown') .
+                '.'
+            );
+        }
+
         $expected_amount = (int) round(
             self::normalize_amount($registration->total_amount ?? 0) * 100
         );
@@ -527,7 +558,6 @@ class DISI_Registration_Manager {
         }
 
         $valid = (
-            ($transaction['status'] ?? '') === 'success' &&
             ($transaction['reference'] ?? '') === $reference &&
             intval($transaction['amount'] ?? 0) === $expected_amount &&
             ($transaction['currency'] ?? '') === 'NGN' &&
@@ -577,6 +607,38 @@ class DISI_Registration_Manager {
         }
 
         return self::get($registration->id);
+    }
+
+    public static function resend_approval_email($registration_id) {
+
+        $registration = self::get($registration_id);
+
+        if (
+            !$registration ||
+            $registration->status !== 'approved' ||
+            empty($registration->paystack_authorization_url)
+        ) {
+            return new WP_Error(
+                'payment_email_unavailable',
+                'A payment email can only be sent to an approved registration with a payment link.'
+            );
+        }
+
+        if (!class_exists('DISI_Email')) {
+            return new WP_Error(
+                'email_service_unavailable',
+                'The email service is unavailable.'
+            );
+        }
+
+        if (!DISI_Email::send_approval_email($registration)) {
+            return new WP_Error(
+                'payment_email_failed',
+                'WordPress could not send the payment email.'
+            );
+        }
+
+        return true;
     }
 
     public static function get_by_paystack_reference($reference) {

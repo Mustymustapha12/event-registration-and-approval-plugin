@@ -222,7 +222,7 @@ class DISI_Email {
         $amount =
         floatval($amount);
 
-        return 'NGN ' .
+        return '₦' .
         number_format(
             $amount,
             2

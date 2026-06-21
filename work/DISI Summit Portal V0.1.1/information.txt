@@ -1,5 +1,5 @@
 DISI Summit Portal
-Version: 0.3.0
+Version: 0.3.1
 
 This plugin manages DISI Summit 2026 registrations inside WordPress.
 
@@ -27,6 +27,11 @@ Main features:
 - Successfully verified registrations are marked paid and include payment time and Paystack transaction ID.
 - Workshop-only registrations are priced using only the configured workshop amount.
 - Group bookings support a custom registration amount during approval, with any workshop add-on applied separately.
+- Fluent Forms trash, single deletion, and bulk permanent deletion events remove matching portal registrations.
+- Registration lists can be filtered by paid or unpaid payment status.
+- Payment status is displayed with clear badges and amounts use the naira symbol.
+- Approved registrations can have their payment-link email resent from the detail page.
+- Unpaid Paystack verification results now report the transaction status directly.
 - The dashboard shows total, pending, approved, and rejected registrations.
 - The plugin applies DISI branding colors:
   Dark Azure #172b3b

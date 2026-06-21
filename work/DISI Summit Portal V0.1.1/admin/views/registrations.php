@@ -19,6 +19,10 @@ $status = sanitize_text_field(
     $_GET['status'] ?? ''
 );
 
+$payment_status = sanitize_text_field(
+    $_GET['payment_status'] ?? ''
+);
+
 $search = sanitize_text_field(
     $_GET['s'] ?? ''
 );
@@ -29,6 +33,7 @@ DISI_Registration_Manager::get_paginated(
     $per_page,
     $type,
     $status,
+    $payment_status,
     $search
 );
 
@@ -36,6 +41,7 @@ $total =
 DISI_Registration_Manager::total_count(
     $type,
     $status,
+    $payment_status,
     $search
 );
 
@@ -144,6 +150,28 @@ Rejected
 
 </select>
 
+<select name="payment_status">
+
+<option value="">
+All Payments
+</option>
+
+<option
+value="unpaid"
+<?php selected($payment_status, 'unpaid'); ?>
+>
+Unpaid
+</option>
+
+<option
+value="paid"
+<?php selected($payment_status, 'paid'); ?>
+>
+Paid
+</option>
+
+</select>
+
 <input
 type="search"
 name="s"
@@ -174,6 +202,7 @@ Filter
 <th>Email</th>
 <th>Status</th>
 <th>Payment</th>
+<th>Amount</th>
 <th>Date</th>
 <th>Actions</th>
 
@@ -272,10 +301,29 @@ $row->status
 <td>
 
 <?php
+$row_payment_status = $row->payment_status ?? 'unpaid';
+?>
+
+<span
+class="disi-payment-badge disi-payment-<?php echo esc_attr($row_payment_status); ?>"
+>
+<?php echo esc_html(ucfirst($row_payment_status)); ?>
+</span>
+
+</td>
+
+<td>
+
+<span class="disi-money">
+&#8358;<?php
 echo esc_html(
-    ucfirst($row->payment_status ?? 'unpaid')
+    number_format(
+        floatval($row->total_amount ?? 0),
+        2
+    )
 );
 ?>
+</span>
 
 </td>
 
@@ -311,7 +359,7 @@ View
 
 <tr>
 
-<td colspan="8">
+<td colspan="9">
 
 No registrations found.
 
@@ -365,6 +413,7 @@ add_query_arg(
 'paged' => $i,
 'type' => $type,
 'status' => $status,
+'payment_status' => $payment_status,
 's' => $search
 ]
 
