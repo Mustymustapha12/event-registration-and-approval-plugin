@@ -8,6 +8,10 @@ if (!class_exists('FPDF')) {
     require_once __DIR__ . '/vendor/fpdf/fpdf.php';
 }
 
+if (!class_exists('chillerlan\\QRCode\\QRCode')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+}
+
 class DISI_Ticketing {
 
     public function __construct() {
@@ -175,94 +179,84 @@ class DISI_Ticketing {
         exit;
     }
 
-    public static function barcode_svg($value, $height = 72) {
+    public static function qr_svg($value) {
 
-        $bars = self::code128_values($value);
+        $matrix = self::qr_matrix($value);
 
-        if (empty($bars)) {
+        if (empty($matrix)) {
             return '';
         }
 
-        $modules = 0;
-
-        foreach ($bars as $pattern) {
-            $modules += array_sum(str_split($pattern));
-        }
-
-        $quiet = 10;
-        $width = $modules + ($quiet * 2);
-        $x = $quiet;
         $rectangles = '';
 
-        foreach ($bars as $pattern) {
-            $parts = str_split($pattern);
-
-            foreach ($parts as $index => $part) {
-                $bar_width = intval($part);
-
-                if ($index % 2 === 0) {
+        foreach ($matrix as $y => $row) {
+            foreach ($row as $x => $is_dark) {
+                if ($is_dark) {
                     $rectangles .= sprintf(
-                        '<rect x="%d" y="0" width="%d" height="%d"/>',
+                        '<rect x="%d" y="%d" width="1" height="1"/>',
                         $x,
-                        $bar_width,
-                        $height
+                        $y
                     );
                 }
-
-                $x += $bar_width;
             }
         }
 
         return sprintf(
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" role="img" aria-label="Ticket barcode"><rect width="100%%" height="100%%" fill="#fff"/><g fill="#172b3b">%s</g></svg>',
-            $width,
-            $height,
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %1$d %1$d" shape-rendering="crispEdges" role="img" aria-label="Ticket QR code"><rect width="100%%" height="100%%" fill="#fff"/><g fill="#172b3b">%2$s</g></svg>',
+            count($matrix),
             $rectangles
         );
     }
 
-    public static function draw_pdf_barcode(
+    public static function draw_pdf_qr(
         $pdf,
         $value,
         $x,
         $y,
-        $width,
-        $height
+        $size
     ) {
 
-        $bars = self::code128_values($value);
+        $matrix = self::qr_matrix($value);
 
-        if (empty($bars)) {
+        if (empty($matrix)) {
             return;
         }
 
-        $modules = 20;
-
-        foreach ($bars as $pattern) {
-            $modules += array_sum(str_split($pattern));
-        }
-
-        $module_width = $width / $modules;
-        $current_x = $x + (10 * $module_width);
+        $module_size = $size / count($matrix);
+        $pdf->SetFillColor(255, 255, 255);
+        $pdf->Rect($x, $y, $size, $size, 'F');
         $pdf->SetFillColor(23, 43, 59);
 
-        foreach ($bars as $pattern) {
-            foreach (str_split($pattern) as $index => $part) {
-                $bar_width = intval($part) * $module_width;
-
-                if ($index % 2 === 0) {
+        foreach ($matrix as $row => $modules) {
+            foreach ($modules as $column => $is_dark) {
+                if ($is_dark) {
                     $pdf->Rect(
-                        $current_x,
-                        $y,
-                        $bar_width,
-                        $height,
+                        $x + ($column * $module_size),
+                        $y + ($row * $module_size),
+                        $module_size,
+                        $module_size,
                         'F'
                     );
                 }
-
-                $current_x += $bar_width;
             }
         }
+    }
+
+    private static function qr_matrix($value) {
+
+        if (empty($value)) {
+            return [];
+        }
+
+        $options = new \chillerlan\QRCode\QROptions([
+            'eccLevel' => \chillerlan\QRCode\QRCode::ECC_M,
+            'addQuietzone' => true,
+            'quietzoneSize' => 4
+        ]);
+
+        return (new \chillerlan\QRCode\QRCode($options))
+            ->getMatrix((string) $value)
+            ->matrix(true);
     }
 
     private static function issue($registration) {
@@ -320,7 +314,7 @@ class DISI_Ticketing {
         );
         $name = $name ?: 'Participant';
         $logo = DISI_PLUGIN_URL . 'assets/images/disi-logo.png';
-        $barcode = self::barcode_svg($ticket_url, 58);
+        $qr_code = self::qr_svg($ticket_url);
 
         $message = '
         <html>
@@ -339,13 +333,13 @@ class DISI_Ticketing {
                         <tr><td>Participant</td><td><strong>' . esc_html($name) . '</strong></td></tr>
                         <tr><td>Registration Type</td><td><strong>' . esc_html(DISI_Registration_Manager::label_registration_type($registration->registration_type)) . '</strong></td></tr>
                     </table>
-                    <div style="margin:28px 0;background:#fff;padding:15px;border:1px solid #dbe5e2;">
-                        ' . $barcode . '
+                    <div style="margin:28px auto;background:#fff;padding:15px;border:1px solid #dbe5e2;max-width:220px;">
+                        ' . $qr_code . '
                     </div>
                     <p style="text-align:center;">
                         <a href="' . esc_url($ticket_url) . '" style="display:inline-block;background:#ffc801;color:#172b3b;padding:13px 24px;text-decoration:none;font-weight:bold;">View E-ticket</a>
                     </p>
-                    <p style="font-size:13px;color:#64706e;">The barcode opens the secure electronic copy of this ticket. Keep the ticket private.</p>
+                    <p style="font-size:13px;color:#64706e;">The QR code opens the secure electronic copy of this ticket. Keep the ticket private.</p>
                 </div>
             </div>
         </body>
@@ -464,7 +458,7 @@ class DISI_Ticketing {
             ($registration->last_name ?? '')
         );
         $url = self::ticket_url($registration);
-        $barcode = self::barcode_svg($url, 80);
+        $qr_code = self::qr_svg($url);
         $logo = DISI_PLUGIN_URL . 'assets/images/disi-logo.png';
 
         return '<!doctype html>
@@ -477,7 +471,7 @@ class DISI_Ticketing {
         .body{padding:32px}.valid{display:inline-block;background:#dcfce7;color:#166534;padding:7px 12px;font-weight:700;border-radius:6px}
         .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:24px 0}
         .field{border:1px solid #dbe5e2;padding:13px}.label{font-size:12px;color:#687673;margin-bottom:6px}.value{font-weight:700;overflow-wrap:anywhere}
-        .barcode{border:1px solid #dbe5e2;padding:18px;background:#fff}.barcode svg{width:100%;height:100px}
+        .qr-code{border:1px solid #dbe5e2;padding:18px;background:#fff}.qr-code svg{display:block;width:min(100%,240px);height:auto;margin:auto}
         .note{font-size:13px;color:#687673;text-align:center;margin-top:16px}
         @media(max-width:600px){.ticket{margin:0}.body{padding:20px}.grid{grid-template-columns:1fr}}
         </style></head><body>
@@ -493,8 +487,8 @@ class DISI_Ticketing {
         self::ticket_field('Registration Type', DISI_Registration_Manager::label_registration_type($registration->registration_type)) .
         self::ticket_field('Payment Status', 'Paid') .
         self::ticket_field('Issued At', $registration->ticket_issued_at) .
-        '</div><div class="barcode">' . $barcode . '</div>
-        <p class="note">Present this barcode at the event entrance. This ticket is personal and should not be shared.</p>
+        '</div><div class="qr-code">' . $qr_code . '</div>
+        <p class="note">Present this QR code at the event entrance. This ticket is personal and should not be shared.</p>
         </div></main></body></html>';
     }
 
@@ -512,60 +506,6 @@ class DISI_Ticketing {
             '</div></div>';
     }
 
-    private static function code128_values($value) {
-
-        $patterns = self::code128_patterns();
-        $codes = [104];
-        $checksum = 104;
-        $position = 1;
-
-        foreach (str_split((string) $value) as $character) {
-            $ascii = ord($character);
-
-            if ($ascii < 32 || $ascii > 126) {
-                continue;
-            }
-
-            $code = $ascii - 32;
-            $codes[] = $code;
-            $checksum += $code * $position;
-            $position++;
-        }
-
-        $codes[] = $checksum % 103;
-        $codes[] = 106;
-
-        return array_map(
-            function ($code) use ($patterns) {
-                return $patterns[$code];
-            },
-            $codes
-        );
-    }
-
-    private static function code128_patterns() {
-
-        return [
-            '212222','222122','222221','121223','121322','131222',
-            '122213','122312','132212','221213','221312','231212',
-            '112232','122132','122231','113222','123122','123221',
-            '223211','221132','221231','213212','223112','312131',
-            '311222','321122','321221','312212','322112','322211',
-            '212123','212321','232121','111323','131123','131321',
-            '112313','132113','132311','211313','231113','231311',
-            '112133','112331','132131','113123','113321','133121',
-            '313121','211331','231131','213113','213311','213131',
-            '311123','311321','331121','312113','312311','332111',
-            '314111','221411','431111','111224','111422','121124',
-            '121421','141122','141221','112214','112412','122114',
-            '122411','142112','142211','241211','221114','413111',
-            '241112','134111','111242','121142','121241','114212',
-            '124112','124211','411212','421112','421211','212141',
-            '214121','412121','111143','111341','131141','114113',
-            '114311','411113','411311','113141','114131','311141',
-            '411131','211412','211214','211232','2331112'
-        ];
-    }
 }
 
 class DISI_Ticket_PDF extends FPDF {
@@ -627,17 +567,16 @@ class DISI_Ticket_PDF extends FPDF {
 
         $this->SetY(184);
         $this->SetDrawColor(219, 229, 226);
-        $this->Rect(14, 180, 182, 72, 'D');
-        DISI_Ticketing::draw_pdf_barcode(
+        $this->Rect(14, 180, 182, 86, 'D');
+        DISI_Ticketing::draw_pdf_qr(
             $this,
             $ticket_url,
-            20,
-            192,
-            170,
-            38
+            76,
+            186,
+            58
         );
 
-        $this->SetY(234);
+        $this->SetY(246);
         $this->SetTextColor(23, 43, 59);
         $this->SetFont('Helvetica', 'B', 9);
         $this->Cell(
@@ -655,7 +594,7 @@ class DISI_Ticket_PDF extends FPDF {
         $this->MultiCell(
             0,
             5,
-            'Scan the barcode to open the secure electronic copy. Keep this ticket private.',
+            'Scan the QR code to open the secure electronic copy. Keep this ticket private.',
             0,
             'C'
         );
