@@ -350,6 +350,12 @@ class="disi-payment-badge disi-payment-<?php echo esc_attr($row_payment_status);
 <td>
 
 <span class="disi-money">
+<?php if (
+    $row->registration_type === 'group_booking' &&
+    $row->status === 'pending'
+) : ?>
+Set on approval
+<?php else : ?>
 &#8358;<?php
 echo esc_html(
     number_format(
@@ -358,6 +364,7 @@ echo esc_html(
     )
 );
 ?>
+<?php endif; ?>
 </span>
 
 </td>

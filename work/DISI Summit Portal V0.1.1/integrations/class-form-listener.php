@@ -44,8 +44,15 @@ class DISI_Form_Listener {
         );
 
         add_action(
-            'forminator_form_entry_delete',
+            'forminator_before_delete_entry',
             [$this, 'delete_forminator'],
+            10,
+            2
+        );
+
+        add_action(
+            'forminator_before_delete_entries',
+            [$this, 'delete_forminator_bulk'],
             10,
             2
         );
@@ -210,8 +217,8 @@ class DISI_Form_Listener {
     }
 
     public function delete_forminator(
-        $entry_id,
-        $form_id = 0
+        $form_id,
+        $entry_id
     ) {
 
         DISI_Registration_Manager::delete_by_source_entry(
@@ -219,6 +226,28 @@ class DISI_Form_Listener {
             $form_id,
             $entry_id
         );
+    }
+
+    public function delete_forminator_bulk(
+        $form_id,
+        $entry_ids
+    ) {
+
+        $entry_ids = is_array($entry_ids)
+            ? $entry_ids
+            : preg_split('/\s*,\s*/', (string) $entry_ids);
+
+        foreach ($entry_ids as $entry_id) {
+            if (empty($entry_id)) {
+                continue;
+            }
+
+            DISI_Registration_Manager::delete_by_source_entry(
+                'Forminator',
+                $form_id,
+                $entry_id
+            );
+        }
     }
 
     public function capture_contact_form_7($contact_form) {
@@ -380,6 +409,11 @@ class DISI_Form_Listener {
         $total_amount =
         $registration_amount +
         $workshop_amount;
+
+        if ($registration_type === 'group_booking') {
+            $registration_amount = 0;
+            $total_amount = 0;
+        }
 
         $full_name =
         $this->find_name($form_data);
@@ -590,7 +624,7 @@ class DISI_Form_Listener {
         );
 
         if ($registration_type === 'group_booking') {
-            return $amount * max(1, intval($group_count));
+            return 0;
         }
 
         return $amount;

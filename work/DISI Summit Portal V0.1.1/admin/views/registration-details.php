@@ -208,6 +208,15 @@ $registration->email
 
 <strong>Total Amount:</strong>
 
+<?php if (
+    $registration->registration_type === 'group_booking' &&
+    $registration->status === 'pending'
+) : ?>
+
+<span class="disi-money">Set during approval</span>
+
+<?php else : ?>
+
 <span class="disi-money">
 &#8358;<?php
 echo esc_html(
@@ -218,6 +227,8 @@ echo esc_html(
 );
 ?>
 </span>
+
+<?php endif; ?>
 
 </div>
 
@@ -411,14 +422,9 @@ endif;
             name="group_custom_amount"
             type="text"
             inputmode="decimal"
-            value="<?php echo esc_attr(
-                number_format(
-                    floatval($registration->registration_amount ?? 0),
-                    2,
-                    '.',
-                    ','
-                )
-            ); ?>"
+            class="disi-group-amount-input"
+            value=""
+            placeholder="Example: 1,500,000.00"
             required
             >
 
@@ -547,3 +553,19 @@ Back
 </div>
 
 </div>
+
+<script>
+document.querySelectorAll('.disi-group-amount-input').forEach(function (input) {
+    input.addEventListener('input', function () {
+        var parts = input.value
+            .replace(/,/g, '')
+            .replace(/[^\d.]/g, '')
+            .split('.');
+        var whole = parts.shift() || '';
+        var decimal = parts.join('').slice(0, 2);
+
+        input.value = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',') +
+            (parts.length ? '.' + decimal : '');
+    });
+});
+</script>

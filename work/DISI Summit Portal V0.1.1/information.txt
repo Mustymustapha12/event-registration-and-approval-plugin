@@ -1,5 +1,5 @@
 DISI Summit Portal
-Version: 0.3.4
+Version: 0.3.5
 
 This plugin manages DISI Summit 2026 registrations inside WordPress.
 
@@ -46,6 +46,13 @@ Main features:
 - Rejected registration value is displayed in a separate dashboard card.
 - Forminator generated field IDs are mapped to their configured human-readable labels when possible.
 - Generated provider field names such as name-1, email-1, and phone-1 are cleaned for display and export without changing stored integration behavior.
+- Group bookings have no registration or total amount until an administrator enters the custom amount during approval.
+- Existing pending group booking amounts are reset safely during the database upgrade.
+- Group booking approval requires a positive custom amount and formats thousands separators while typing.
+- Pending group booking lists and details show that the amount will be set during approval.
+- The dashboard includes an Approved but Unpaid registration card and renames Pending Registrations to Pending Approvals.
+- Dashboard amount cards use responsive sizing and overflow protection for multi-million-naira values.
+- Forminator single and bulk entry deletion hooks remove the matching portal registrations.
 - CSV values are protected against spreadsheet formula execution.
 - PDF generation is bundled through FPDF 1.86 and does not require a server PDF extension.
 - The plugin applies DISI branding colors:

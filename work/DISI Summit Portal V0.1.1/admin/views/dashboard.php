@@ -32,6 +32,12 @@ DISI_Registration_Manager::payment_count(
     'paid'
 );
 
+$unpaid =
+DISI_Registration_Manager::payment_count(
+    'unpaid',
+    'approved'
+);
+
 $amounts =
 DISI_Registration_Manager::amount_totals();
 
@@ -39,7 +45,7 @@ DISI_Registration_Manager::amount_totals();
 
 <div class="wrap">
 
-<h1>DISI Summit Portal V0.3.4</h1>
+<h1>DISI Summit Portal V0.3.5</h1>
 
 <div class="disi-dashboard-grid">
 
@@ -57,11 +63,23 @@ DISI_Registration_Manager::amount_totals();
 
     <div class="disi-dashboard-card disi-dashboard-card-pending">
 
-        <h3>Pending Registrations</h3>
+        <h3>Pending Approvals</h3>
 
         <div class="count">
 
             <?php echo esc_html($pending); ?>
+
+        </div>
+
+    </div>
+
+    <div class="disi-dashboard-card disi-dashboard-card-pending">
+
+        <h3>Approved but Unpaid</h3>
+
+        <div class="count">
+
+            <?php echo esc_html($unpaid); ?>
 
         </div>
 

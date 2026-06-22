@@ -446,6 +446,10 @@ class DISI_Registration_Manager {
                 COALESCE(SUM(
                     CASE
                         WHEN status != 'rejected'
+                        AND (
+                            registration_type != 'group_booking'
+                            OR status = 'approved'
+                        )
                         THEN registration_amount
                         ELSE 0
                     END
@@ -454,6 +458,10 @@ class DISI_Registration_Manager {
                 COALESCE(SUM(
                     CASE
                         WHEN status != 'rejected'
+                        AND (
+                            registration_type != 'group_booking'
+                            OR status = 'approved'
+                        )
                         THEN workshop_amount
                         ELSE 0
                     END
@@ -462,6 +470,10 @@ class DISI_Registration_Manager {
                 COALESCE(SUM(
                     CASE
                         WHEN status != 'rejected'
+                        AND (
+                            registration_type != 'group_booking'
+                            OR status = 'approved'
+                        )
                         THEN total_amount
                         ELSE 0
                     END
@@ -559,7 +571,16 @@ class DISI_Registration_Manager {
 
         if (
             $registration->registration_type === 'group_booking' &&
-            self::normalize_amount($group_custom_amount) > 0
+            self::normalize_amount($group_custom_amount) <= 0
+        ) {
+            return new WP_Error(
+                'group_amount_required',
+                'Enter the group booking amount before approval.'
+            );
+        }
+
+        if (
+            $registration->registration_type === 'group_booking'
         ) {
             $registration_amount = self::normalize_amount(
                 $group_custom_amount
@@ -784,19 +805,31 @@ class DISI_Registration_Manager {
         );
     }
 
-    public static function payment_count($payment_status) {
+    public static function payment_count(
+        $payment_status,
+        $registration_status = ''
+    ) {
 
         global $wpdb;
 
         $table = DISI_Database::get_table();
 
+        $where = $wpdb->prepare(
+            "WHERE payment_status = %s",
+            sanitize_text_field($payment_status)
+        );
+
+        if (!empty($registration_status)) {
+            $where .= $wpdb->prepare(
+                " AND status = %s",
+                sanitize_text_field($registration_status)
+            );
+        }
+
         return $wpdb->get_var(
-            $wpdb->prepare(
-                "SELECT COUNT(*)
-                 FROM {$table}
-                 WHERE payment_status = %s",
-                sanitize_text_field($payment_status)
-            )
+            "SELECT COUNT(*)
+             FROM {$table}
+             {$where}"
         );
     }
 

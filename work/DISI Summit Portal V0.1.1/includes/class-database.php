@@ -208,6 +208,14 @@ class DISI_Database {
                 $wpdb->query($query);
             }
         }
+
+        $wpdb->query(
+            "UPDATE {$table}
+             SET registration_amount = 0,
+                 total_amount = 0
+             WHERE registration_type = 'group_booking'
+             AND status = 'pending'"
+        );
     }
 
     /**
