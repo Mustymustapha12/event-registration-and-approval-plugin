@@ -224,7 +224,7 @@ class DISI_Ticketing {
 
     public function handle_admin_send() {
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(DISI_MANAGE_CAPABILITY)) {
             wp_die('You are not allowed to send tickets.');
         }
 
@@ -255,7 +255,7 @@ class DISI_Ticketing {
 
     public function handle_export() {
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(DISI_MANAGE_CAPABILITY)) {
             wp_die('You are not allowed to export E-tickets.');
         }
 
@@ -453,7 +453,7 @@ class DISI_Ticketing {
         }
 
         $is_admin_preview = (
-            current_user_can('manage_options') &&
+            current_user_can(DISI_MANAGE_CAPABILITY) &&
             !empty($_GET['disi_preview']) &&
             wp_verify_nonce(
                 sanitize_text_field(
@@ -608,6 +608,8 @@ class DISI_Ticketing {
         $name = $name ?: 'Participant';
         $logo = DISI_PLUGIN_URL . 'assets/images/disi-logo.png';
         $qr_code = self::qr_svg($ticket_url);
+        $admit_count = self::admit_count($registration);
+        $group_rows = self::email_group_detail_rows($registration);
 
         $message = '
         <html>
@@ -625,6 +627,8 @@ class DISI_Ticketing {
                         <tr><td>Registration Number</td><td><strong>' . esc_html(DISI_Registration_Manager::get_registration_number($registration)) . '</strong></td></tr>
                         <tr><td>Participant</td><td><strong>' . esc_html($name) . '</strong></td></tr>
                         <tr><td>Registration Type</td><td><strong>' . esc_html(DISI_Registration_Manager::label_registration_type($registration->registration_type)) . '</strong></td></tr>
+                        <tr><td>Admit</td><td><strong>' . esc_html(number_format($admit_count) . ' ' . ($admit_count === 1 ? 'person' : 'people')) . '</strong></td></tr>
+                        ' . $group_rows . '
                     </table>
                     <div style="margin:28px auto;background:#fff;padding:15px;border:1px solid #dbe5e2;max-width:220px;">
                         ' . $qr_code . '
@@ -753,6 +757,13 @@ class DISI_Ticketing {
         $url = self::ticket_url($registration);
         $qr_code = self::qr_svg($url);
         $logo = DISI_PLUGIN_URL . 'assets/images/disi-logo.png';
+        $admit_count = self::admit_count($registration);
+        $group_fields = self::group_ticket_fields($registration, 4);
+        $group_html = '';
+
+        foreach ($group_fields as $field) {
+            $group_html .= self::ticket_field($field['label'], $field['value']);
+        }
 
         return '<!doctype html>
         <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -763,7 +774,7 @@ class DISI_Ticketing {
         .head{background:#172b3b;padding:24px;text-align:center}.head img{max-width:190px;height:auto}
         .body{padding:32px}.valid{display:inline-block;background:#dcfce7;color:#166534;padding:7px 12px;font-weight:700;border-radius:6px}
         .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:24px 0}
-        .field{border:1px solid #dbe5e2;padding:13px}.label{font-size:12px;color:#687673;margin-bottom:6px}.value{font-weight:700;overflow-wrap:anywhere}
+        .field{border:1px solid #dbe5e2;padding:13px}.label{font-size:12px;color:#687673;margin-bottom:6px}.value{font-weight:700;overflow-wrap:anywhere;white-space:pre-line}
         .qr-code{border:1px solid #dbe5e2;padding:18px;background:#fff}.qr-code svg{display:block;width:min(100%,240px);height:auto;margin:auto}
         .note{font-size:13px;color:#687673;text-align:center;margin-top:16px}
         @media(max-width:600px){.ticket{margin:0}.body{padding:20px}.grid{grid-template-columns:1fr}}
@@ -778,8 +789,10 @@ class DISI_Ticketing {
         self::ticket_field('Email', $registration->email) .
         self::ticket_field('Phone', $registration->phone) .
         self::ticket_field('Registration Type', DISI_Registration_Manager::label_registration_type($registration->registration_type)) .
+        self::ticket_field('Admit', number_format($admit_count) . ' ' . ($admit_count === 1 ? 'person' : 'people')) .
         self::ticket_field('Payment Status', 'Paid') .
         self::ticket_field('Issued At', $registration->ticket_issued_at) .
+        $group_html .
         '</div><div class="qr-code">' . $qr_code . '</div>
         <p class="note">Present this QR code at the event entrance. This ticket is personal and should not be shared.</p>
         </div></main></body></html>';
@@ -797,6 +810,325 @@ class DISI_Ticketing {
             '</div><div class="value">' .
             esc_html($value ?: '-') .
             '</div></div>';
+    }
+
+    public static function admit_count($registration) {
+
+        if (($registration->registration_type ?? '') !== 'group_booking') {
+            return 1;
+        }
+
+        $data = self::submitted_data($registration);
+        $count = 0;
+
+        foreach ($data as $key => $value) {
+            $label = strtolower(
+                DISI_Registration_Manager::label_submission_field($key)
+            );
+
+            if (!self::looks_like_group_count_field($label)) {
+                continue;
+            }
+
+            if (is_array($value)) {
+                $candidate = count(array_filter($value));
+            } else {
+                preg_match_all('/\d+/', (string) $value, $matches);
+                $candidate = !empty($matches[0])
+                    ? max(array_map('intval', $matches[0]))
+                    : intval($value);
+            }
+
+            if ($candidate > $count && $candidate < 10000) {
+                $count = $candidate;
+            }
+        }
+
+        return max(1, $count);
+    }
+
+    public static function admit_label($registration) {
+
+        $count = self::admit_count($registration);
+
+        if ($count <= 1) {
+            return 'ADMIT ONE';
+        }
+
+        return 'ADMIT ' . number_format($count);
+    }
+
+    private static function email_group_detail_rows($registration) {
+
+        $rows = '';
+
+        foreach (self::group_ticket_fields($registration, 4) as $field) {
+            $rows .= '<tr><td>' . esc_html($field['label']) .
+                '</td><td><strong>' . nl2br(esc_html($field['value'])) .
+                '</strong></td></tr>';
+        }
+
+        return $rows;
+    }
+
+    public static function group_ticket_fields($registration, $limit = 3) {
+
+        if (($registration->registration_type ?? '') !== 'group_booking') {
+            return [];
+        }
+
+        $data = self::submitted_data($registration);
+        $fields = [];
+        $used_labels = [];
+
+        foreach ($data as $key => $value) {
+            if (DISI_Registration_Manager::is_hidden_submission_field($key)) {
+                continue;
+            }
+
+            $label = DISI_Registration_Manager::label_submission_field($key);
+            $label_key = strtolower($label);
+
+            if (!self::looks_like_group_detail_field($label_key)) {
+                continue;
+            }
+
+            if (is_array($value)) {
+                $value = implode(', ', array_filter($value));
+            }
+
+            $value = self::format_group_field_value($label, $value);
+
+            if ($value === '') {
+                continue;
+            }
+
+            $fields[] = [
+                'label' => $label,
+                'value' => $value
+            ];
+            $used_labels[strtolower($label)] = true;
+
+            if (count($fields) >= $limit) {
+                return $fields;
+            }
+        }
+
+        foreach ($data as $key => $value) {
+            if (count($fields) >= $limit) {
+                break;
+            }
+
+            if (DISI_Registration_Manager::is_hidden_submission_field($key)) {
+                continue;
+            }
+
+            $label = DISI_Registration_Manager::label_submission_field($key);
+            $label_key = strtolower($label);
+
+            if (isset($used_labels[$label_key])) {
+                continue;
+            }
+
+            if (
+                strpos($label_key, 'email') !== false ||
+                strpos($label_key, 'phone') !== false
+            ) {
+                continue;
+            }
+
+            if (is_array($value)) {
+                $value = implode(', ', array_filter($value));
+            }
+
+            $value = self::format_group_field_value($label, $value);
+
+            if ($value === '') {
+                continue;
+            }
+
+            $fields[] = [
+                'label' => $label,
+                'value' => $value
+            ];
+        }
+
+        return $fields;
+    }
+
+    public static function attendee_names($registration) {
+
+        if (($registration->registration_type ?? '') !== 'group_booking') {
+            return '';
+        }
+
+        foreach (self::submitted_data($registration) as $key => $value) {
+            if (DISI_Registration_Manager::is_hidden_submission_field($key)) {
+                continue;
+            }
+
+            $label = DISI_Registration_Manager::label_submission_field($key);
+
+            if (!self::looks_like_attendee_name_field(strtolower($label))) {
+                continue;
+            }
+
+            if (is_array($value)) {
+                $value = implode("\n", array_filter($value));
+            }
+
+            $names = self::format_name_list($value);
+
+            if ($names !== '') {
+                return $names;
+            }
+        }
+
+        return '';
+    }
+
+    private static function format_group_field_value($label, $value) {
+
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if (self::looks_like_attendee_name_field(strtolower($label))) {
+            return self::format_name_list($value);
+        }
+
+        return $value;
+    }
+
+    private static function format_name_list($value) {
+
+        $text = trim((string) $value);
+
+        if ($text === '') {
+            return '';
+        }
+
+        $text = preg_replace('/\s*(?:\r\n|\r|\n|;|\|)\s*/', "\n", $text);
+        $text = preg_replace('/\s*,\s*/', "\n", $text);
+        $text = preg_replace('/\n+/', "\n", $text);
+        $names = array_filter(array_map('trim', explode("\n", $text)));
+        $names = array_map([__CLASS__, 'title_case_name'], $names);
+
+        return implode("\n", $names);
+    }
+
+    private static function title_case_name($name) {
+
+        $name = strtolower(trim((string) $name));
+
+        if ($name === '') {
+            return '';
+        }
+
+        return preg_replace_callback(
+            '/(^|[\s\\-\\.\'])([a-z])/',
+            function ($matches) {
+                return $matches[1] . strtoupper($matches[2]);
+            },
+            $name
+        );
+    }
+
+    private static function submitted_data($registration) {
+
+        $data = json_decode($registration->submitted_data ?? '', true);
+
+        return is_array($data) ? $data : [];
+    }
+
+    private static function looks_like_group_count_field($label) {
+
+        $fragments = [
+            'number',
+            'participant',
+            'attendee',
+            'delegate',
+            'people',
+            'person',
+            'seat',
+            'quantity',
+            'count',
+            'group size'
+        ];
+
+        foreach ($fragments as $fragment) {
+            if (strpos($label, $fragment) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function looks_like_group_detail_field($label) {
+
+        $fragments = [
+            'group',
+            'company',
+            'organization',
+            'organisation',
+            'institution',
+            'delegate',
+            'participant',
+            'attendee',
+            'people',
+            'person',
+            'seat',
+            'number',
+            'count',
+            'contact'
+        ];
+
+        foreach ($fragments as $fragment) {
+            if (strpos($label, $fragment) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function looks_like_attendee_name_field($label) {
+
+        if (
+            strpos($label, 'number') !== false ||
+            strpos($label, 'count') !== false ||
+            strpos($label, 'quantity') !== false ||
+            strpos($label, 'seat') !== false ||
+            strpos($label, 'how many') !== false ||
+            strpos($label, 'how much') !== false
+        ) {
+            return false;
+        }
+
+        $fragments = [
+            'full name',
+            'attendee name',
+            'attendees name',
+            'attendees',
+            'participant name',
+            'participants name',
+            'participants',
+            'delegate name',
+            'delegates name',
+            'delegates',
+            'names'
+        ];
+
+        foreach ($fragments as $fragment) {
+            if (strpos($label, $fragment) !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }
@@ -829,6 +1161,11 @@ class DISI_Ticket_PDF extends FPDF {
                 $registration->registration_type
             );
         $ticket_number = DISI_Ticketing::ticket_number($registration);
+        $admit_label = DISI_Ticketing::admit_label($registration);
+        $group_fields = DISI_Ticketing::group_ticket_fields($registration, 2);
+        $attendee_names = DISI_Ticketing::attendee_names($registration);
+        $is_group_booking =
+            ($registration->registration_type ?? '') === 'group_booking';
 
         $this->SetFillColor(244, 248, 247);
         $this->Rect(0, 0, 240, 100, 'F');
@@ -855,7 +1192,7 @@ class DISI_Ticket_PDF extends FPDF {
         $this->SetXY(172, 5);
         $this->SetFont('Helvetica', 'B', 8);
         $this->SetTextColor(255, 200, 1);
-        $this->Cell(61, 5, 'ADMIT ONE', 0, 1, 'R');
+        $this->Cell(61, 5, DISI_Exporter::pdf_text($admit_label), 0, 1, 'R');
         $this->SetX(172);
         $this->SetFont('Helvetica', '', 7);
         $this->SetTextColor(255, 255, 255);
@@ -906,23 +1243,38 @@ class DISI_Ticket_PDF extends FPDF {
             108,
             59,
             51,
-            'PHONE',
-            $registration->phone
+            'ADMIT',
+            str_replace('ADMIT ', '', $admit_label)
         );
-        $this->detail(
-            8,
-            75,
-            98,
-            'EMAIL',
-            $registration->email
-        );
-        $this->detail(
-            108,
-            75,
-            51,
-            'ISSUED',
-            $registration->ticket_issued_at
-        );
+        if ($is_group_booking) {
+            $this->multi_detail(
+                8,
+                75,
+                151,
+                $attendee_names !== ''
+                    ? 'ATTENDEES'
+                    : (!empty($group_fields[0]) ? strtoupper($group_fields[0]['label']) : 'GROUP DETAILS'),
+                $attendee_names !== ''
+                    ? $attendee_names
+                    : (!empty($group_fields[0]) ? $group_fields[0]['value'] : 'Group Booking'),
+                5
+            );
+        } else {
+            $this->detail(
+                8,
+                75,
+                48,
+                'PHONE',
+                $registration->phone
+            );
+            $this->detail(
+                58,
+                75,
+                101,
+                'EMAIL',
+                $registration->email
+            );
+        }
 
         $this->SetFillColor(83, 150, 92);
         $this->Rect(0, 94, 165, 6, 'F');
@@ -1001,6 +1353,74 @@ class DISI_Ticket_PDF extends FPDF {
             0,
             0
         );
+    }
+
+    private function multi_detail($x, $y, $width, $label, $value, $max_lines) {
+
+        $this->SetXY($x, $y);
+        $this->SetTextColor(100, 112, 110);
+        $this->SetFont('Helvetica', 'B', 6);
+        $this->Cell($width, 4, DISI_Exporter::pdf_text($label), 0, 1);
+
+        $this->SetTextColor(23, 43, 59);
+        $this->SetFont('Helvetica', 'B', 4.8);
+
+        $lines = $this->wrap_lines(
+            DISI_Exporter::pdf_text($value ?: '-'),
+            $width,
+            $max_lines
+        );
+
+        foreach ($lines as $line) {
+            $this->SetX($x);
+            $this->Cell($width, 2.8, $line, 0, 1);
+        }
+    }
+
+    private function wrap_lines($text, $width, $max_lines) {
+
+        $lines = [];
+        $width = max(10, $width);
+
+        foreach (preg_split('/\R/', (string) $text) as $paragraph) {
+            $paragraph = trim($paragraph);
+
+            if ($paragraph === '') {
+                continue;
+            }
+
+            $words = preg_split('/\s+/', $paragraph);
+            $line = '';
+
+            foreach ($words as $word) {
+                $candidate = trim($line . ' ' . $word);
+
+                if ($line !== '' && $this->GetStringWidth($candidate) > $width) {
+                    $lines[] = $line;
+                    $line = $word;
+                } else {
+                    $line = $candidate;
+                }
+
+                if (count($lines) >= $max_lines) {
+                    break 2;
+                }
+            }
+
+            if ($line !== '') {
+                $lines[] = $line;
+            }
+
+            if (count($lines) >= $max_lines) {
+                break;
+            }
+        }
+
+        if (count($lines) > $max_lines) {
+            $lines = array_slice($lines, 0, $max_lines);
+        }
+
+        return $lines ?: ['-'];
     }
 
     private function fit_font(

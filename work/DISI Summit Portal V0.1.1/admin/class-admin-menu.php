@@ -38,10 +38,10 @@ class DISI_Admin_Menu {
 
         add_menu_page(
             $licensed
-                ? 'DISI Summit Portal V0.5.0'
+                ? 'DISI Summit Portal V0.5.4'
                 : 'DISI Portal Approval Required',
             'DISI Portal',
-            'manage_options',
+            DISI_MANAGE_CAPABILITY,
             'disi-dashboard',
             $licensed ? [$this, 'dashboard'] : [$this, 'license'],
             'dashicons-groups',
@@ -53,7 +53,7 @@ class DISI_Admin_Menu {
                 'disi-dashboard',
                 'License',
                 'License',
-                'manage_options',
+                DISI_MANAGE_CAPABILITY,
                 'disi-dashboard',
                 [$this, 'license']
             );
@@ -65,7 +65,7 @@ class DISI_Admin_Menu {
             'disi-dashboard',
             'Dashboard',
             'Dashboard',
-            'manage_options',
+            DISI_MANAGE_CAPABILITY,
             'disi-dashboard',
             [$this, 'dashboard']
         );
@@ -74,16 +74,34 @@ class DISI_Admin_Menu {
             'disi-dashboard',
             'Registrations',
             'Registrations',
-            'manage_options',
+            DISI_MANAGE_CAPABILITY,
             'disi-registrations',
             [$this, 'registrations']
         );
 
         add_submenu_page(
             'disi-dashboard',
+            'Duplicate Entries',
+            'Duplicate Entries',
+            DISI_MANAGE_CAPABILITY,
+            'disi-duplicates',
+            [$this, 'duplicates']
+        );
+
+        add_submenu_page(
+            'disi-dashboard',
+            'Sponsorship Enquiries',
+            'Sponsorship Enquiries',
+            DISI_MANAGE_CAPABILITY,
+            'disi-sponsorship',
+            [$this, 'sponsorship']
+        );
+
+        add_submenu_page(
+            'disi-dashboard',
             'Integrations',
             'Integrations',
-            'manage_options',
+            DISI_MANAGE_CAPABILITY,
             'disi-integrations',
             [$this, 'integrations']
         );
@@ -92,7 +110,7 @@ class DISI_Admin_Menu {
             'disi-dashboard',
             'E-ticketing',
             'E-ticketing',
-            'manage_options',
+            DISI_MANAGE_CAPABILITY,
             'disi-eticketing',
             [$this, 'eticketing']
         );
@@ -101,7 +119,7 @@ class DISI_Admin_Menu {
             'disi-dashboard',
             'License',
             'License',
-            'manage_options',
+            DISI_MANAGE_CAPABILITY,
             'disi-license',
             [$this, 'license']
         );
@@ -110,7 +128,7 @@ class DISI_Admin_Menu {
             null,
             'Registration Details',
             'Registration Details',
-            'manage_options',
+            DISI_MANAGE_CAPABILITY,
             'disi-registration-view',
             [$this, 'registration_view']
         );
@@ -158,6 +176,28 @@ class DISI_Admin_Menu {
 
         include DISI_PLUGIN_DIR .
         'admin/views/integrations.php';
+    }
+
+    public function duplicates() {
+
+        if (!$this->licensed()) {
+            $this->license();
+            return;
+        }
+
+        include DISI_PLUGIN_DIR .
+        'admin/views/duplicates.php';
+    }
+
+    public function sponsorship() {
+
+        if (!$this->licensed()) {
+            $this->license();
+            return;
+        }
+
+        include DISI_PLUGIN_DIR .
+        'admin/views/sponsorship.php';
     }
 
     public function eticketing() {

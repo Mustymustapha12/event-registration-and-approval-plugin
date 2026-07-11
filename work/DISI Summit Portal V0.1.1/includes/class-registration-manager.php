@@ -9,7 +9,7 @@ class DISI_Registration_Manager {
     /**
      * Create registration
      */
-    public static function create($data = []) {
+    public static function create($data = [], $allow_duplicate = false) {
 
         global $wpdb;
 
@@ -45,6 +45,7 @@ class DISI_Registration_Manager {
         }
 
         if (
+            !$allow_duplicate &&
             self::email_exists($email)
         ) {
 
@@ -61,6 +62,7 @@ class DISI_Registration_Manager {
         */
 
         if (
+            !$allow_duplicate &&
             !empty($data['phone']) &&
             self::phone_exists(
                 $data['phone']
@@ -135,6 +137,11 @@ class DISI_Registration_Manager {
                         $data['workshop_amount'] ?? 0
                     ),
 
+                'exhibition_amount' =>
+                    self::normalize_amount(
+                        $data['exhibition_amount'] ?? 0
+                    ),
+
                 'total_amount' =>
                     self::normalize_amount(
                         $data['total_amount'] ?? 0
@@ -168,6 +175,175 @@ class DISI_Registration_Manager {
         }
 
         return $wpdb->insert_id;
+    }
+
+    public static function create_sponsorship_enquiry($data = []) {
+
+        global $wpdb;
+
+        return $wpdb->insert(
+            DISI_Database::get_sponsorship_table(),
+            [
+                'source_plugin' => sanitize_text_field($data['source_plugin'] ?? ''),
+                'form_id' => intval($data['form_id'] ?? 0),
+                'source_entry_id' => sanitize_text_field($data['source_entry_id'] ?? ''),
+                'name' => sanitize_text_field($data['name'] ?? ''),
+                'email' => sanitize_email($data['email'] ?? ''),
+                'phone' => sanitize_text_field($data['phone'] ?? ''),
+                'company' => sanitize_text_field($data['company'] ?? ''),
+                'submitted_data' => wp_json_encode($data['submitted_data'] ?? []),
+                'created_at' => current_time('mysql'),
+                'updated_at' => current_time('mysql')
+            ]
+        );
+    }
+
+    public static function get_sponsorship_enquiries($status = '') {
+
+        global $wpdb;
+
+        $table = DISI_Database::get_sponsorship_table();
+        $where = '';
+
+        if (!empty($status)) {
+            $where = $wpdb->prepare('WHERE status = %s', $status);
+        }
+
+        return $wpdb->get_results(
+            "SELECT *
+             FROM {$table}
+             {$where}
+             ORDER BY id DESC"
+        );
+    }
+
+    public static function create_duplicate_entry($data = [], $reason = '') {
+
+        global $wpdb;
+
+        return $wpdb->insert(
+            DISI_Database::get_duplicate_table(),
+            [
+                'registration_type' => sanitize_text_field($data['registration_type'] ?? ''),
+                'source_plugin' => sanitize_text_field($data['source_plugin'] ?? ''),
+                'form_id' => intval($data['form_id'] ?? 0),
+                'source_entry_id' => sanitize_text_field($data['source_entry_id'] ?? ''),
+                'email' => sanitize_email($data['email'] ?? ''),
+                'phone' => sanitize_text_field($data['phone'] ?? ''),
+                'first_name' => sanitize_text_field($data['first_name'] ?? ''),
+                'last_name' => sanitize_text_field($data['last_name'] ?? ''),
+                'business_name' => sanitize_text_field($data['business_name'] ?? ''),
+                'registration_amount' => self::normalize_amount($data['registration_amount'] ?? 0),
+                'workshop_amount' => self::normalize_amount($data['workshop_amount'] ?? 0),
+                'exhibition_amount' => self::normalize_amount($data['exhibition_amount'] ?? 0),
+                'total_amount' => self::normalize_amount($data['total_amount'] ?? 0),
+                'submitted_data' => wp_json_encode($data['submitted_data'] ?? []),
+                'duplicate_reason' => sanitize_text_field($reason),
+                'created_at' => current_time('mysql'),
+                'updated_at' => current_time('mysql')
+            ]
+        );
+    }
+
+    public static function get_duplicates($status = '') {
+
+        global $wpdb;
+
+        $table = DISI_Database::get_duplicate_table();
+        $where = '';
+
+        if (!empty($status)) {
+            $where = $wpdb->prepare('WHERE status = %s', $status);
+        }
+
+        return $wpdb->get_results(
+            "SELECT *
+             FROM {$table}
+             {$where}
+             ORDER BY id DESC"
+        );
+    }
+
+    public static function get_duplicate($id) {
+
+        global $wpdb;
+
+        return $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT *
+                 FROM " . DISI_Database::get_duplicate_table() . "
+                 WHERE id = %d",
+                intval($id)
+            )
+        );
+    }
+
+    public static function approve_duplicate($id) {
+
+        global $wpdb;
+
+        $duplicate = self::get_duplicate($id);
+
+        if (!$duplicate || $duplicate->status !== 'pending') {
+            return new WP_Error(
+                'invalid_duplicate',
+                'Only pending duplicate entries can be approved.'
+            );
+        }
+
+        $registration_id = self::create(
+            [
+                'registration_type' => $duplicate->registration_type,
+                'source_plugin' => $duplicate->source_plugin,
+                'form_id' => $duplicate->form_id,
+                'source_entry_id' => $duplicate->source_entry_id,
+                'email' => $duplicate->email,
+                'phone' => $duplicate->phone,
+                'first_name' => $duplicate->first_name,
+                'last_name' => $duplicate->last_name,
+                'business_name' => $duplicate->business_name,
+                'registration_amount' => $duplicate->registration_amount,
+                'workshop_amount' => $duplicate->workshop_amount,
+                'exhibition_amount' => $duplicate->exhibition_amount,
+                'total_amount' => $duplicate->total_amount,
+                'submitted_data' => json_decode($duplicate->submitted_data, true)
+            ],
+            true
+        );
+
+        if (is_wp_error($registration_id)) {
+            return $registration_id;
+        }
+
+        $wpdb->update(
+            DISI_Database::get_duplicate_table(),
+            [
+                'status' => 'approved',
+                'reviewed_by' => get_current_user_id(),
+                'reviewed_at' => current_time('mysql'),
+                'created_registration_id' => intval($registration_id),
+                'updated_at' => current_time('mysql')
+            ],
+            ['id' => intval($id)]
+        );
+
+        return $registration_id;
+    }
+
+    public static function reject_duplicate($id) {
+
+        global $wpdb;
+
+        return $wpdb->update(
+            DISI_Database::get_duplicate_table(),
+            [
+                'status' => 'rejected',
+                'reviewed_by' => get_current_user_id(),
+                'reviewed_at' => current_time('mysql'),
+                'updated_at' => current_time('mysql')
+            ],
+            ['id' => intval($id), 'status' => 'pending']
+        );
     }
 
     /**
@@ -474,6 +650,18 @@ class DISI_Registration_Manager {
                             registration_type != 'group_booking'
                             OR status = 'approved'
                         )
+                        THEN exhibition_amount
+                        ELSE 0
+                    END
+                ), 0)
+                    AS exhibition_amount,
+                COALESCE(SUM(
+                    CASE
+                        WHEN status != 'rejected'
+                        AND (
+                            registration_type != 'group_booking'
+                            OR status = 'approved'
+                        )
                         THEN total_amount
                         ELSE 0
                     END
@@ -586,7 +774,8 @@ class DISI_Registration_Manager {
                 $group_custom_amount
             );
             $total_amount = $registration_amount +
-                self::normalize_amount($registration->workshop_amount ?? 0);
+                self::normalize_amount($registration->workshop_amount ?? 0) +
+                self::normalize_amount($registration->exhibition_amount ?? 0);
 
             $amount_updated = $wpdb->update(
                 DISI_Database::get_table(),
@@ -1040,6 +1229,7 @@ class DISI_Registration_Manager {
 
         $labels = [
             'professional' => 'Professional',
+            'vip' => 'VIP',
             'academic_researcher' => 'Academic/Researcher',
             'student' => 'Student',
             'group_booking' => 'Group Booking',

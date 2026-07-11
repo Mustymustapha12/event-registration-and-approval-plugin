@@ -13,6 +13,17 @@ class DISI_Activator {
             DISI_Database::maybe_upgrade();
         }
 
+        self::ensure_capabilities();
+
         flush_rewrite_rules();
+    }
+
+    public static function ensure_capabilities() {
+
+        $role = get_role('administrator');
+
+        if ($role && defined('DISI_MANAGE_CAPABILITY')) {
+            $role->add_cap(DISI_MANAGE_CAPABILITY);
+        }
     }
 }

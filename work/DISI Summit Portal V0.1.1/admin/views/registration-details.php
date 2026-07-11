@@ -206,6 +206,40 @@ $registration->email
 
 <div>
 
+<strong>Workshop Add-on:</strong>
+
+<span class="disi-money">
+&#8358;<?php
+echo esc_html(
+    number_format(
+        floatval($registration->workshop_amount ?? 0),
+        2
+    )
+);
+?>
+</span>
+
+</div>
+
+<div>
+
+<strong>Exhibition Add-on:</strong>
+
+<span class="disi-money">
+&#8358;<?php
+echo esc_html(
+    number_format(
+        floatval($registration->exhibition_amount ?? 0),
+        2
+    )
+);
+?>
+</span>
+
+</div>
+
+<div>
+
 <strong>Total Amount:</strong>
 
 <?php if (
@@ -429,7 +463,7 @@ endif;
             >
 
             <p class="description">
-                Enter the total group registration amount before any workshop add-on.
+                Enter the total group registration amount before any workshop or exhibition add-on.
             </p>
 
         <?php endif; ?>

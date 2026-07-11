@@ -3,7 +3,7 @@
  * Plugin Name: DISI Summit Portal
  * Plugin URI: https://layer6.ng
  * Description: DISI Summit 2026 registration approval, pricing, payment notification, and form integration portal.
- * Version: 0.5.0
+ * Version: 0.5.4
  * Author: Mustapha Mustapha
  * License: GPL2
  */
@@ -26,6 +26,11 @@ define(
 define(
     'DISI_PLUGIN_URL',
     plugin_dir_url(__FILE__)
+);
+
+define(
+    'DISI_MANAGE_CAPABILITY',
+    'manage_disi_portal'
 );
 
 /*
@@ -74,6 +79,11 @@ add_action(
         if (class_exists('DISI_Database')) {
 
             DISI_Database::maybe_upgrade();
+        }
+
+        if (class_exists('DISI_Activator')) {
+
+            DISI_Activator::ensure_capabilities();
         }
 
         if (class_exists('DISI_Admin_Menu')) {

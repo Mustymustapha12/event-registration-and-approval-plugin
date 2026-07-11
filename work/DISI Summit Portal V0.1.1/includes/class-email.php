@@ -67,6 +67,10 @@ class DISI_Email {
                     <td><strong>' . esc_html(self::format_amount($registration->workshop_amount ?? 0)) . '</strong></td>
                 </tr>
                 <tr>
+                    <td>Exhibition Add-on</td>
+                    <td><strong>' . esc_html(self::format_amount($registration->exhibition_amount ?? 0)) . '</strong></td>
+                </tr>
+                <tr>
                     <td>Total Amount to Pay</td>
                     <td><strong>' . esc_html($total_amount) . '</strong></td>
                 </tr>

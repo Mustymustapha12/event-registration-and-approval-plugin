@@ -45,7 +45,7 @@ DISI_Registration_Manager::amount_totals();
 
 <div class="wrap">
 
-<h1>DISI Summit Portal V0.5.0</h1>
+<h1>DISI Summit Portal V0.5.4</h1>
 
 <div class="disi-dashboard-grid">
 
@@ -116,6 +116,23 @@ DISI_Registration_Manager::amount_totals();
         <div class="count">
 
             <?php echo esc_html($paid); ?>
+
+        </div>
+
+    </div>
+
+    <div class="disi-dashboard-card disi-dashboard-card-pending">
+
+        <h3>Active Exhibition Add-ons</h3>
+
+        <div class="count disi-dashboard-amount">
+
+            &#8358;<?php echo esc_html(
+                number_format(
+                    floatval($amounts->exhibition_amount ?? 0),
+                    1
+                )
+            ); ?>
 
         </div>
 

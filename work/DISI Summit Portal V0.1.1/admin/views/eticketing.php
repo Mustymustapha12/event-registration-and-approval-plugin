@@ -97,6 +97,9 @@ Approved registrations with verified successful payments appear here.
         <option value="professional" <?php
         selected($type, 'professional');
         ?>>Professional</option>
+        <option value="vip" <?php
+        selected($type, 'vip');
+        ?>>VIP</option>
         <option value="academic_researcher" <?php
         selected($type, 'academic_researcher');
         ?>>Academic/Researcher</option>

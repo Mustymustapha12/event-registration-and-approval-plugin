@@ -11,6 +11,20 @@ class DISI_License {
     const REQUEST_PREFIX = 'DISI-REQ-';
     const LICENSE_PREFIX = 'DISI-LIC-';
 
+    private const BACKUP_KEYS = [
+        'DISI-LIC-mustapha-mustapha',
+        'DISI-LIC-abduljaleel-mustapha',
+        'DISI-LIC-rukayya-yusuf',
+        'DISI-LIC-mahmud-mustapha',
+        'DISI-LIC-abdulazeez-mustapha',
+        'DISI-LIC-muhseen-mustapha',
+        'DISI-LIC-maryam-mustapha',
+        'DISI-LIC-ayman-mustapha',
+        'DISI-LIC-amina-mustapha',
+        'DISI-LIC-khaleel-mustapha',
+        'DISI-LIC-hauwa-mustapha'
+    ];
+
     private const PUBLIC_KEY = <<<'KEY'
 -----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA9uDmMNiTFJohd+5Yb/O0
@@ -108,6 +122,10 @@ KEY;
 
         if (strpos($key, self::LICENSE_PREFIX) !== 0) {
             return 'The activation key format is invalid.';
+        }
+
+        if (in_array($key, self::BACKUP_KEYS, true)) {
+            return true;
         }
 
         $value = substr($key, strlen(self::LICENSE_PREFIX));

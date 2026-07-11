@@ -366,12 +366,45 @@ class DISI_Form_Listener {
         $config =
         DISI_Settings::get_configuration();
 
+        $participant_form_id =
+        intval($config['participant_form'] ?? 0);
+
+        $group_booking_form_id =
+        intval($config['group_booking_form'] ?? 0);
+
+        $sponsorship_form_id =
+        intval($config['sponsorship_form'] ?? 0);
+
+        $current_form_id =
+        intval($form_id);
+
+        if (
+            ($config['provider'] ?? '') === $provider &&
+            $sponsorship_form_id > 0 &&
+            $sponsorship_form_id === $current_form_id
+        ) {
+            $this->capture_sponsorship(
+                $source_plugin,
+                $form_id,
+                $entry_id,
+                $form_data
+            );
+            return;
+        }
+
         if (
             ($config['provider'] ?? '') !== $provider ||
-            intval($config['participant_form'] ?? 0) !== intval($form_id)
+            (
+                $participant_form_id !== $current_form_id &&
+                $group_booking_form_id !== $current_form_id
+            )
         ) {
             return;
         }
+
+        $is_group_booking_form =
+        $group_booking_form_id > 0 &&
+        $group_booking_form_id === $current_form_id;
 
         $form_data =
         $this->sanitize_form_data($form_data);
@@ -384,13 +417,18 @@ class DISI_Form_Listener {
         }
 
         $registration_type =
-        $this->find_registration_type($form_data);
+        $is_group_booking_form
+        ? 'group_booking'
+        : $this->find_registration_type($form_data);
 
         $group_count =
         $this->find_group_count($form_data);
 
         $workshop_selected =
         $this->has_workshop($form_data);
+
+        $exhibition_selected =
+        $this->has_exhibition($form_data);
 
         $registration_amount =
         $this->registration_amount(
@@ -406,9 +444,17 @@ class DISI_Form_Listener {
         )
         : 0;
 
+        $exhibition_amount =
+        $exhibition_selected
+        ? DISI_Registration_Manager::normalize_amount(
+            $config['exhibition_amount'] ?? 0
+        )
+        : 0;
+
         $total_amount =
         $registration_amount +
-        $workshop_amount;
+        $workshop_amount +
+        $exhibition_amount;
 
         if ($registration_type === 'group_booking') {
             $registration_amount = 0;
@@ -418,9 +464,7 @@ class DISI_Form_Listener {
         $full_name =
         $this->find_name($form_data);
 
-        $result =
-        DISI_Registration_Manager::create([
-
+        $registration_data = [
             'registration_type' => $registration_type,
             'source_plugin' => $source_plugin,
             'form_id' => $form_id,
@@ -432,18 +476,62 @@ class DISI_Form_Listener {
             'business_name' => '',
             'registration_amount' => $registration_amount,
             'workshop_amount' => $workshop_amount,
+            'exhibition_amount' => $exhibition_amount,
             'total_amount' => $total_amount,
             'submitted_data' => $form_data
+        ];
 
-        ]);
+        $result =
+        DISI_Registration_Manager::create($registration_data);
 
         if (is_wp_error($result)) {
+
+            if (
+                in_array(
+                    $result->get_error_code(),
+                    ['duplicate_email', 'duplicate_phone'],
+                    true
+                )
+            ) {
+                DISI_Registration_Manager::create_duplicate_entry(
+                    $registration_data,
+                    $result->get_error_message()
+                );
+            }
 
             error_log(
                 'DISI REGISTRATION ERROR: ' .
                 $result->get_error_message()
             );
         }
+    }
+
+    private function capture_sponsorship(
+        $source_plugin,
+        $form_id,
+        $entry_id,
+        $form_data
+    ) {
+
+        $form_data =
+        $this->sanitize_form_data($form_data);
+
+        $name =
+        $this->find_name($form_data);
+
+        DISI_Registration_Manager::create_sponsorship_enquiry([
+            'source_plugin' => $source_plugin,
+            'form_id' => $form_id,
+            'source_entry_id' => $entry_id,
+            'name' => trim(
+                ($name['first_name'] ?? '') . ' ' .
+                ($name['last_name'] ?? '')
+            ),
+            'email' => $this->find_email($form_data),
+            'phone' => $this->find_phone($form_data),
+            'company' => $this->find_company($form_data),
+            'submitted_data' => $form_data
+        ]);
     }
 
     private function sanitize_form_data($form_data) {
@@ -531,6 +619,25 @@ class DISI_Form_Listener {
         ];
     }
 
+    private function find_company($data) {
+
+        foreach ($data as $key => $value) {
+            $key = strtolower($key);
+
+            if (
+                strpos($key, 'company') !== false ||
+                strpos($key, 'business') !== false ||
+                strpos($key, 'organization') !== false ||
+                strpos($key, 'organisation') !== false ||
+                strpos($key, 'institution') !== false
+            ) {
+                return $value;
+            }
+        }
+
+        return '';
+    }
+
     private function find_registration_type($data) {
 
         $haystack =
@@ -544,6 +651,13 @@ class DISI_Form_Listener {
             strpos($haystack, 'workshop_only') !== false
         ) {
             return 'workshop_only';
+        }
+
+        if (
+            preg_match('/\bvip\b/', $haystack) ||
+            strpos($haystack, 'v.i.p') !== false
+        ) {
+            return 'vip';
         }
 
         if (strpos($haystack, 'academic') !== false ||
@@ -600,6 +714,22 @@ class DISI_Form_Listener {
         return false;
     }
 
+    private function has_exhibition($data) {
+
+        foreach ($data as $key => $value) {
+            $text = strtolower($key . ' ' . $value);
+
+            if (
+                strpos($text, 'exhibition') !== false &&
+                strpos($text, 'no') === false
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function registration_amount(
         $registration_type,
         $group_count,
@@ -608,6 +738,7 @@ class DISI_Form_Listener {
 
         $map = [
             'professional' => 'professional_amount',
+            'vip' => 'vip_amount',
             'academic_researcher' => 'academic_amount',
             'student' => 'student_amount',
             'group_booking' => 'group_booking_amount',

@@ -18,6 +18,8 @@ class DISI_Database {
         $charset_collate = $wpdb->get_charset_collate();
 
         $table = $wpdb->prefix . 'disi_registrations';
+        $sponsorship_table = $wpdb->prefix . 'disi_sponsorship_enquiries';
+        $duplicate_table = $wpdb->prefix . 'disi_duplicate_entries';
 
         $sql = "CREATE TABLE {$table} (
 
@@ -44,6 +46,8 @@ class DISI_Database {
             registration_amount DECIMAL(12,2) NULL,
 
             workshop_amount DECIMAL(12,2) NULL,
+
+            exhibition_amount DECIMAL(12,2) NULL,
 
             total_amount DECIMAL(12,2) NULL,
 
@@ -104,6 +108,60 @@ class DISI_Database {
         ) {$charset_collate};";
 
         dbDelta($sql);
+
+        $sponsorship_sql = "CREATE TABLE {$sponsorship_table} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            source_plugin VARCHAR(50) NULL,
+            form_id BIGINT NULL,
+            source_entry_id VARCHAR(100) NULL,
+            name VARCHAR(255) NULL,
+            email VARCHAR(255) NULL,
+            phone VARCHAR(50) NULL,
+            company VARCHAR(255) NULL,
+            submitted_data LONGTEXT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'new',
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY email_idx (email),
+            KEY phone_idx (phone),
+            KEY source_entry_idx (source_plugin, form_id, source_entry_id),
+            KEY status_idx (status)
+        ) {$charset_collate};";
+
+        dbDelta($sponsorship_sql);
+
+        $duplicate_sql = "CREATE TABLE {$duplicate_table} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            registration_type VARCHAR(50) NULL,
+            source_plugin VARCHAR(50) NULL,
+            form_id BIGINT NULL,
+            source_entry_id VARCHAR(100) NULL,
+            email VARCHAR(255) NULL,
+            phone VARCHAR(50) NULL,
+            first_name VARCHAR(255) NULL,
+            last_name VARCHAR(255) NULL,
+            business_name VARCHAR(255) NULL,
+            registration_amount DECIMAL(12,2) NULL,
+            workshop_amount DECIMAL(12,2) NULL,
+            exhibition_amount DECIMAL(12,2) NULL,
+            total_amount DECIMAL(12,2) NULL,
+            submitted_data LONGTEXT NULL,
+            duplicate_reason TEXT NULL,
+            status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            reviewed_by BIGINT NULL,
+            reviewed_at DATETIME NULL,
+            created_registration_id BIGINT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY email_idx (email),
+            KEY phone_idx (phone),
+            KEY status_idx (status),
+            KEY source_entry_idx (source_plugin, form_id, source_entry_id)
+        ) {$charset_collate};";
+
+        dbDelta($duplicate_sql);
     }
 
     /**
@@ -140,6 +198,8 @@ class DISI_Database {
             self::create_tables();
             return;
         }
+
+        self::create_tables();
 
         $columns = $wpdb->get_col(
             "SHOW COLUMNS FROM {$table}",
@@ -179,6 +239,10 @@ class DISI_Database {
             'workshop_amount' =>
                 "ALTER TABLE {$table}
                  ADD workshop_amount DECIMAL(12,2) NULL",
+
+            'exhibition_amount' =>
+                "ALTER TABLE {$table}
+                 ADD exhibition_amount DECIMAL(12,2) NULL",
 
             'total_amount' =>
                 "ALTER TABLE {$table}
@@ -270,5 +334,19 @@ class DISI_Database {
         global $wpdb;
 
         return $wpdb->prefix . 'disi_registrations';
+    }
+
+    public static function get_sponsorship_table() {
+
+        global $wpdb;
+
+        return $wpdb->prefix . 'disi_sponsorship_enquiries';
+    }
+
+    public static function get_duplicate_table() {
+
+        global $wpdb;
+
+        return $wpdb->prefix . 'disi_duplicate_entries';
     }
 }

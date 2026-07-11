@@ -23,6 +23,14 @@ if (
             $_POST['participant_form'] ?? 0
         ),
 
+        'group_booking_form' => intval(
+            $_POST['group_booking_form'] ?? 0
+        ),
+
+        'sponsorship_form' => intval(
+            $_POST['sponsorship_form'] ?? 0
+        ),
+
         'paystack_secret_key' => !empty($_POST['paystack_secret_key'])
             ? sanitize_text_field(
                 wp_unslash($_POST['paystack_secret_key'])
@@ -50,6 +58,11 @@ if (
                 $_POST['professional_amount'] ?? ''
             ),
 
+        'vip_amount' =>
+            DISI_Registration_Manager::normalize_amount(
+                $_POST['vip_amount'] ?? ''
+            ),
+
         'academic_amount' =>
             DISI_Registration_Manager::normalize_amount(
                 $_POST['academic_amount'] ?? ''
@@ -68,6 +81,11 @@ if (
         'workshop_amount' =>
             DISI_Registration_Manager::normalize_amount(
                 $_POST['workshop_amount'] ?? ''
+            ),
+
+        'exhibition_amount' =>
+            DISI_Registration_Manager::normalize_amount(
+                $_POST['exhibition_amount'] ?? ''
             )
 
     ];
@@ -105,10 +123,12 @@ if (!empty($provider)) {
 
 $amount_fields = [
     'professional_amount' => 'Professional Amount',
+    'vip_amount' => 'VIP Amount',
     'academic_amount' => 'Academic/Researcher Amount',
     'student_amount' => 'Student Amount',
     'group_booking_amount' => 'Group Booking Amount Per Person',
-    'workshop_amount' => 'Workshop Payment Amount'
+    'workshop_amount' => 'Workshop Payment Amount',
+    'exhibition_amount' => 'Exhibition Payment Amount'
 ];
 
 ?>
@@ -203,6 +223,96 @@ $amount_fields = [
                         <?php endforeach; ?>
 
                     </select>
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+                    Group Booking Form
+                </th>
+
+                <td>
+
+                    <select
+                        name="group_booking_form"
+                    >
+
+                        <option value="">
+                            Select Group Booking Form
+                        </option>
+
+                        <?php foreach ($forms as $form) : ?>
+
+                            <?php
+                            $form_id = DISI_Form_Provider::get_form_id($form);
+                            $form_title = DISI_Form_Provider::get_form_title($form);
+                            ?>
+
+                            <option
+                                value="<?php echo esc_attr($form_id); ?>"
+                                <?php selected(
+                                    $config['group_booking_form'] ?? '',
+                                    $form_id
+                                ); ?>
+                            >
+                                <?php echo esc_html($form_title); ?>
+                            </option>
+
+                        <?php endforeach; ?>
+
+                    </select>
+
+                    <p class="description">
+                        Entries from this form are captured as Group Booking registrations.
+                    </p>
+
+                </td>
+
+            </tr>
+
+            <tr>
+
+                <th>
+                    Sponsorship Enquiry Form
+                </th>
+
+                <td>
+
+                    <select
+                        name="sponsorship_form"
+                    >
+
+                        <option value="">
+                            Select Sponsorship Form
+                        </option>
+
+                        <?php foreach ($forms as $form) : ?>
+
+                            <?php
+                            $form_id = DISI_Form_Provider::get_form_id($form);
+                            $form_title = DISI_Form_Provider::get_form_title($form);
+                            ?>
+
+                            <option
+                                value="<?php echo esc_attr($form_id); ?>"
+                                <?php selected(
+                                    $config['sponsorship_form'] ?? '',
+                                    $form_id
+                                ); ?>
+                            >
+                                <?php echo esc_html($form_title); ?>
+                            </option>
+
+                        <?php endforeach; ?>
+
+                    </select>
+
+                    <p class="description">
+                        Entries from this form are stored under Sponsorship Enquiries.
+                    </p>
 
                 </td>
 
@@ -309,18 +419,18 @@ $amount_fields = [
                             ?>"
                             placeholder="<?php
                             echo esc_attr(
-                                $field === 'workshop_amount'
-                                ? 'The workshop payment is an add-on to the registration type amount'
+                                in_array($field, ['workshop_amount', 'exhibition_amount'], true)
+                                ? 'This payment is an add-on to the registration type amount'
                                 : 'Example: 50,000.00'
                             );
                             ?>"
                         >
 
-                        <?php if ($field === 'workshop_amount') : ?>
+                        <?php if (in_array($field, ['workshop_amount', 'exhibition_amount'], true)) : ?>
 
                             <p class="description">
 
-                                The workshop payment is an add-on to the selected
+                                This payment is an add-on to the selected
                                 registration type amount for subsequent usage.
 
                             </p>

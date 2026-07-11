@@ -20,7 +20,7 @@ class DISI_Exporter {
 
     public function export() {
 
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can(DISI_MANAGE_CAPABILITY)) {
             wp_die('You are not allowed to export registrations.');
         }
 
@@ -82,6 +82,7 @@ class DISI_Exporter {
                 'Source Entry ID',
                 'Registration Amount',
                 'Workshop Amount',
+                'Exhibition Amount',
                 'Total Amount',
                 'Registration Status',
                 'Payment Status',
@@ -130,6 +131,7 @@ class DISI_Exporter {
                 $row->source_entry_id,
                 number_format(floatval($row->registration_amount), 2, '.', ''),
                 number_format(floatval($row->workshop_amount), 2, '.', ''),
+                number_format(floatval($row->exhibition_amount ?? 0), 2, '.', ''),
                 number_format(floatval($row->total_amount), 2, '.', ''),
                 ucfirst($row->status),
                 ucfirst($row->payment_status ?? 'unpaid'),
@@ -494,6 +496,8 @@ class DISI_Registrations_PDF extends FPDF {
                 number_format(floatval($row->registration_amount), 2),
             'Workshop: NGN ' .
                 number_format(floatval($row->workshop_amount), 2),
+            'Exhibition: NGN ' .
+                number_format(floatval($row->exhibition_amount ?? 0), 2),
             'Source: ' . $row->source_plugin .
                 ' / Form ' . $row->form_id .
                 ' / Entry ' . $row->source_entry_id

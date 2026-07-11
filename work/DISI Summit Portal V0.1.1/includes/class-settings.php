@@ -11,15 +11,19 @@ class DISI_Settings {
         $defaults = [
             'provider' => '',
             'participant_form' => '',
+            'group_booking_form' => '',
+            'sponsorship_form' => '',
             'paystack_secret_key' => '',
             'paystack_public_key' => '',
             'paystack_callback_url' => '',
             'paystack_mode' => 'test',
             'professional_amount' => '',
+            'vip_amount' => '',
             'academic_amount' => '',
             'student_amount' => '',
             'group_booking_amount' => '',
-            'workshop_amount' => ''
+            'workshop_amount' => '',
+            'exhibition_amount' => ''
         ];
 
         return wp_parse_args(

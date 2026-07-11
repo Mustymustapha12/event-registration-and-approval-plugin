@@ -74,6 +74,10 @@ class DISI_Paystack {
                 floatval($registration->workshop_amount ?? 0) > 0
                     ? 'Yes'
                     : 'No',
+            'exhibition_option' =>
+                floatval($registration->exhibition_amount ?? 0) > 0
+                    ? 'Yes'
+                    : 'No',
             'registration_id' => intval($registration->id)
         ];
 
