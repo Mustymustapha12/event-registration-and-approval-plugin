@@ -80,22 +80,6 @@ if (
             ? sanitize_hex_color($_POST['accent_color'])
             : '#ffc801',
 
-        'commercial_purchase_url' => esc_url_raw(
-            wp_unslash($_POST['commercial_purchase_url'] ?? '')
-        ),
-
-        'commercial_license_endpoint' => esc_url_raw(
-            wp_unslash($_POST['commercial_license_endpoint'] ?? '')
-        ),
-
-        'commercial_price' => sanitize_text_field(
-            wp_unslash($_POST['commercial_price'] ?? '')
-        ),
-
-        'commercial_currency' => sanitize_text_field(
-            wp_unslash($_POST['commercial_currency'] ?? '')
-        ),
-
         'paystack_secret_key' => !empty($_POST['paystack_secret_key'])
             ? sanitize_text_field(
                 wp_unslash($_POST['paystack_secret_key'])
@@ -339,69 +323,6 @@ $amount_fields = [
                             value="<?php echo esc_attr($config['accent_color'] ?? '#ffc801'); ?>"
                         >
                     </label>
-                </td>
-            </tr>
-
-            <tr>
-                <th colspan="2">
-                    <h2>Commercial Purchase and Licensing</h2>
-                </th>
-            </tr>
-
-            <tr>
-                <th>Purchase / Checkout URL</th>
-                <td>
-                    <input
-                        type="url"
-                        name="commercial_purchase_url"
-                        class="regular-text"
-                        value="<?php echo esc_attr($config['commercial_purchase_url'] ?? ''); ?>"
-                        placeholder="https://your-store.example.com/event-registration-plugin"
-                    >
-                    <p class="description">
-                        Link buyers to a hosted checkout that can issue activation automatically after payment.
-                    </p>
-                </td>
-            </tr>
-
-            <tr>
-                <th>License API Endpoint</th>
-                <td>
-                    <input
-                        type="url"
-                        name="commercial_license_endpoint"
-                        class="regular-text"
-                        value="<?php echo esc_attr($config['commercial_license_endpoint'] ?? ''); ?>"
-                        placeholder="https://your-store.example.com/wp-json/license/v1/activate"
-                    >
-                    <p class="description">
-                        Reserved for a future automated license server. Do not place store secret keys in this plugin.
-                    </p>
-                </td>
-            </tr>
-
-            <tr>
-                <th>Suggested Product Price</th>
-                <td>
-                    <input
-                        type="text"
-                        name="commercial_price"
-                        class="small-text"
-                        value="<?php echo esc_attr($config['commercial_price'] ?? '19'); ?>"
-                    >
-                    <select name="commercial_currency">
-                        <?php foreach (['USD', 'NGN', 'GBP', 'EUR'] as $currency) : ?>
-                            <option
-                                value="<?php echo esc_attr($currency); ?>"
-                                <?php selected($config['commercial_currency'] ?? 'USD', $currency); ?>
-                            >
-                                <?php echo esc_html($currency); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <p class="description">
-                        Recommended launch price: $19 one-time early access, then $29-$49 yearly once automatic updates and hosted licensing are ready.
-                    </p>
                 </td>
             </tr>
 

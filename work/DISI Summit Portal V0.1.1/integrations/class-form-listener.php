@@ -278,9 +278,18 @@ class DISI_Form_Listener {
     ) {
 
         $data = [];
+        $labels = $this->gravityforms_field_labels($form);
 
         foreach ($entry as $key => $value) {
-            $data[$key] = $value;
+            if (!is_scalar($value) && !is_array($value)) {
+                continue;
+            }
+
+            $label = $labels[(string) $key] ??
+                DISI_Registration_Manager::label_submission_field($key);
+
+            $data[$this->unique_submission_label($data, $label, $key)] =
+                $value;
         }
 
         $this->capture(
@@ -809,17 +818,145 @@ class DISI_Form_Listener {
                 continue;
             }
 
-            $label = method_exists($field, 'get_label_for_entry')
-                ? $field->get_label_for_entry()
-                : '';
+            $label = $this->forminator_best_field_label(
+                $field,
+                $formatted,
+                $field_id
+            );
 
-            $labels[$field_id] = !empty($label)
-                ? sanitize_text_field($label)
-                : DISI_Registration_Manager::label_submission_field(
-                    $field_id
-                );
+            $labels[$field_id] = $label;
         }
 
         return $labels;
+    }
+
+    private function forminator_best_field_label(
+        $field,
+        $formatted,
+        $field_id
+    ) {
+
+        $generic_labels = [
+            'input text',
+            'text',
+            'textarea',
+            'email',
+            'phone',
+            'number',
+            'numeric field',
+            'name',
+            'select',
+            'radio',
+            'checkbox',
+            'date',
+            'upload',
+            'html',
+            'hidden'
+        ];
+
+        $candidates = [
+            $formatted['field_label'] ?? '',
+            $formatted['label'] ?? '',
+            $formatted['title'] ?? '',
+            $formatted['name'] ?? ''
+        ];
+
+        if (method_exists($field, 'get_label_for_entry')) {
+            $candidates[] = $field->get_label_for_entry();
+        }
+
+        foreach ($candidates as $candidate) {
+            $candidate = trim(wp_strip_all_tags((string) $candidate));
+
+            if ($candidate === '') {
+                continue;
+            }
+
+            if (
+                in_array(
+                    strtolower($candidate),
+                    $generic_labels,
+                    true
+                )
+            ) {
+                continue;
+            }
+
+            return sanitize_text_field($candidate);
+        }
+
+        return DISI_Registration_Manager::label_submission_field($field_id);
+    }
+
+    private function gravityforms_field_labels($form) {
+
+        $labels = [];
+        $fields = is_array($form) && isset($form['fields'])
+            ? (array) $form['fields']
+            : [];
+
+        foreach ($fields as $field) {
+            if (!is_object($field) && !is_array($field)) {
+                continue;
+            }
+
+            $field_id = (string) $this->field_property($field, 'id');
+            $field_label = sanitize_text_field(
+                (string) $this->field_property($field, 'label')
+            );
+
+            if ($field_id === '' || $field_label === '') {
+                continue;
+            }
+
+            $labels[$field_id] = $field_label;
+
+            $inputs = (array) $this->field_property($field, 'inputs');
+
+            foreach ($inputs as $input) {
+                $input_id = (string) $this->field_property($input, 'id');
+                $input_label = sanitize_text_field(
+                    (string) $this->field_property($input, 'label')
+                );
+
+                if ($input_id === '') {
+                    continue;
+                }
+
+                $labels[$input_id] = $input_label !== ''
+                    ? $field_label . ' - ' . $input_label
+                    : $field_label;
+            }
+        }
+
+        return $labels;
+    }
+
+    private function field_property($field, $property) {
+
+        if (is_array($field)) {
+            return $field[$property] ?? '';
+        }
+
+        if (is_object($field)) {
+            return $field->{$property} ?? '';
+        }
+
+        return '';
+    }
+
+    private function unique_submission_label($data, $label, $key) {
+
+        $label = sanitize_text_field((string) $label);
+
+        if ($label === '') {
+            $label = DISI_Registration_Manager::label_submission_field($key);
+        }
+
+        if (array_key_exists($label, $data)) {
+            $label .= ' (' . $key . ')';
+        }
+
+        return $label;
     }
 }

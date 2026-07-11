@@ -39,6 +39,10 @@ KEY;
 
     public static function is_active() {
 
+        if (self::wordpress_org_mode()) {
+            return true;
+        }
+
         $key = trim((string) get_option(self::OPTION_KEY, ''));
 
         return self::verify($key) === true;
@@ -96,6 +100,10 @@ KEY;
     }
 
     public static function status_message() {
+
+        if (self::wordpress_org_mode()) {
+            return 'The WordPress.org edition is active.';
+        }
 
         $key = trim((string) get_option(self::OPTION_KEY, ''));
 
@@ -177,6 +185,11 @@ KEY;
         ) {
             return 'This activation key was approved for a different installation.';
         }
+
+        return true;
+    }
+
+    private static function wordpress_org_mode() {
 
         return true;
     }

@@ -23,10 +23,6 @@ class DISI_Settings {
             'primary_color' => '#157664',
             'secondary_color' => '#172b3b',
             'accent_color' => '#ffc801',
-            'commercial_purchase_url' => '',
-            'commercial_license_endpoint' => '',
-            'commercial_price' => '19',
-            'commercial_currency' => 'USD',
             'paystack_secret_key' => '',
             'paystack_public_key' => '',
             'paystack_callback_url' => '',
@@ -88,12 +84,6 @@ class DISI_Settings {
                 '#ffc801'
             )
         ];
-    }
-
-    public static function purchase_url() {
-
-        $config = self::get_configuration();
-        return esc_url_raw($config['commercial_purchase_url'] ?? '');
     }
 
     public static function product_name() {

@@ -25,9 +25,6 @@ if (
 }
 
 $is_active = DISI_License::is_active();
-$purchase_url = class_exists('DISI_Settings')
-    ? DISI_Settings::purchase_url()
-    : '';
 $product_name = class_exists('DISI_Settings')
     ? DISI_Settings::product_name()
     : 'Event Registration and Approval Plugin';
@@ -55,22 +52,8 @@ $product_name = class_exists('DISI_Settings')
 
     <?php if (!$is_active) : ?>
         <p>
-            Buy access from the official checkout page, then activate this
-            WordPress installation with the key issued after payment.
+            This WordPress installation is not approved yet.
         </p>
-
-        <?php if (!empty($purchase_url)) : ?>
-            <p>
-                <a
-                    class="button button-primary"
-                    href="<?php echo esc_url($purchase_url); ?>"
-                    target="_blank"
-                    rel="noopener"
-                >
-                    Buy Access
-                </a>
-            </p>
-        <?php endif; ?>
 
         <p>
             If your checkout system requests a site code, use the request

@@ -1,7 +1,7 @@
 Event Registration and Approval Plugin
-Version: 1.0.2
+Version: 1.0.3
 
-This plugin manages event registrations inside WordPress for commercial use.
+This plugin manages event registrations inside WordPress.
 
 Main features:
 - Captures registrations from a selected form provider, selected registration form, and optional selected group booking form.
@@ -70,18 +70,9 @@ Main features:
 - Registration and E-ticketing filters include VIP as a registration type.
 - E-ticketing lists support 10, 25, or 50 participants per page with pagination and matching record totals.
 - Filtered E-ticketing records can be exported as CSV or a branded landscape PDF report.
-- Each WordPress installation now requires a site-specific owner approval key before portal operations are enabled.
+- The WordPress.org edition is usable after installation without a payment or manual activation gate.
 - The plugin uses a custom manage_disi_portal capability so role editor plugins can grant Event Registration access to non-administrator roles.
-- License approval is tied to the normalized WordPress site URL and a unique local installation ID.
-- License verification is performed locally with a signed key and does not rely on a subscription server, recurring network request, or expiration date.
-- Unapproved installations retain access only to the License page while registration capture, Paystack, exports, E-ticketing, and public ticket endpoints remain inactive.
-- The private license signing key and owner approval tool are not included in the installable plugin ZIP.
-
-Owner approval workflow:
-1. The site administrator opens Event Registration > License and sends the displayed request code to the plugin owner or automated checkout system.
-2. The plugin owner runs: php owner-tools/generate-license.php 'DISI-REQ-...'
-3. The generated DISI-LIC activation key is pasted into the site's License page.
-4. Once approved, normal plugin behavior continues without remote license checks or expiry interruptions.
+- Paid Pro features should be delivered as a separate add-on or real external service outside the WordPress.org package.
 - The E-ticketing admin menu lists all approved and paid participants with ticket issue time, email delivery time, scan count, and latest scan time.
 - Admins can issue missing tickets, resend ticket emails, and preview electronic tickets without increasing the scan count.
 - Opening a valid participant ticket records the scan count and latest scan time for admin tracking.
@@ -99,24 +90,16 @@ Owner approval workflow:
 - Default logo assets are bundled in assets/images.
 
 Upload behavior:
-- Version 1.0.0 packages the commercial plugin inside the event-registration-and-approval-plugin folder for new product installs.
+- Version 1.0.0 packages the plugin inside the event-registration-and-approval-plugin folder for new product installs.
 
 Version 1.0.0 update:
-- Commercial product name changed to Event Registration and Approval Plugin.
+- Product name changed to Event Registration and Approval Plugin.
 - Integration page now includes Organization Branding settings:
   organization name, event name, email, phone, website, address, logo URL,
   primary color, secondary color, and accent color.
-- Integration page now includes Commercial Purchase and Licensing settings:
-  purchase/checkout URL, future license API endpoint, suggested product price,
-  and product currency.
 - Dashboard, approval emails, rejection emails, e-ticket emails, public tickets,
   login branding, and exported PDF titles now use configured organization/event
   details where possible.
-- Suggested launch pricing is set to $19 one-time early access, with $29-$49
-  yearly recommended later after hosted automatic updates and license server
-  automation are ready.
-- Automatic buy-and-unlock is structured around an external checkout/licensing
-  endpoint so store secret keys are not embedded in the distributed plugin.
 
 Version 1.0.1 update:
 - Fixes repeated WordPress upgrade warnings from wp-admin/includes/upgrade.php
@@ -133,3 +116,12 @@ Version 1.0.2 update:
   the paid amount higher than the registration amount.
 - Keeps protection against underpayment by rejecting transactions where Paystack
   reports less than the expected registration amount.
+
+Version 1.0.3 update:
+- Removes the Integration page cost, purchase/checkout URL, and license API
+  endpoint fields.
+- Makes the WordPress.org edition usable without the old manual approval gate.
+- Improves Forminator field labels so sponsorship enquiries do not show generic
+  labels such as Input Text or Numeric Field.
+- Improves Gravity Forms capture so submitted numeric field IDs display as the
+  configured form field labels where possible.
