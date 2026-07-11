@@ -31,7 +31,7 @@ class DISI_Paystack {
         if (empty($secret_key) || empty($public_key)) {
             return new WP_Error(
                 'paystack_missing_key',
-                'Add both Paystack API keys in DISI Portal Integrations.'
+                'Add both Paystack API keys in Event Registration Integrations.'
             );
         }
 

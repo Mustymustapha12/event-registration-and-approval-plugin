@@ -27,6 +27,16 @@ class DISI_Admin_Menu {
             [],
             time()
         );
+
+        if (class_exists('DISI_Settings')) {
+            $brand = DISI_Settings::brand();
+            wp_add_inline_style(
+                'disi-admin-css',
+                ':root{--disi-primary:' . esc_attr($brand['primary_color']) .
+                ';--disi-secondary:' . esc_attr($brand['secondary_color']) .
+                ';--disi-accent:' . esc_attr($brand['accent_color']) . ';}'
+            );
+        }
     }
 
     public function register_menu() {
@@ -38,9 +48,9 @@ class DISI_Admin_Menu {
 
         add_menu_page(
             $licensed
-                ? 'DISI Summit Portal V0.5.4'
-                : 'DISI Portal Approval Required',
-            'DISI Portal',
+                ? 'Event Registration and Approval Plugin V1.0.0'
+                : 'Event Registration Approval Required',
+            'Event Registration',
             DISI_MANAGE_CAPABILITY,
             'disi-dashboard',
             $licensed ? [$this, 'dashboard'] : [$this, 'license'],

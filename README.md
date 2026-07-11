@@ -1,29 +1,43 @@
-# DISI Summit Portal
+# Event Registration and Approval Plugin
 
-WordPress plugin for DISI Summit 2026 registration capture, review, pricing,
-payment notifications, and form-provider integration.
+Commercial WordPress plugin for event registration capture, review, pricing,
+payment notifications, e-ticketing, sponsorship enquiries, duplicate handling,
+and form-provider integration.
 
 ## Latest Release
 
-Version `0.5.4`
+Version `1.0.0`
 
 Installable package:
-`outputs/disi-summit-portal-v0.5.4.zip`
+`outputs/event-registration-approval-plugin-v1.0.0.zip`
 
 ## Source
 
 The editable plugin source is in:
 `work/DISI Summit Portal V0.1.1`
 
-The internal folder name remains stable so WordPress replaces the installed
-plugin during ZIP uploads instead of creating a second plugin.
+The workspace source path is kept for continuity, while the v1.0.0 installable
+ZIP uses the commercial plugin folder `event-registration-and-approval-plugin`.
 
 ## Site Approval
 
-Version `0.5.4` requires a signed approval key for each WordPress
-installation. The owner-only generator is documented in
+Version `1.0.0` keeps signed site approval and adds a purchase/checkout URL
+field so a hosted checkout or future license server can issue access
+automatically after payment. The owner-only generator is documented in
 `owner-tools/README.md`. Its private signing key is excluded from Git and from
 the installable plugin package.
+
+## Version 1.0.0
+
+- Rebrands the plugin to Event Registration and Approval Plugin for commercial use.
+- Adds organization branding settings for organization name, event name, email,
+  phone, website, address, logo URL, primary color, secondary color, and accent color.
+- Applies configured branding to the dashboard, integration screen, emails,
+  public e-ticket page, ticket emails, and PDF report titles.
+- Adds commercial checkout settings for purchase URL, future license API endpoint,
+  suggested product price, and currency.
+- Keeps the proven approval, payment, export, e-ticketing, sponsorship enquiry,
+  duplicate entry, group booking, VIP, workshop, and exhibition features.
 
 ## Version 0.5.4
 

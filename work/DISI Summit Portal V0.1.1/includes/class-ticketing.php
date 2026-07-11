@@ -377,8 +377,10 @@ class DISI_Ticketing {
         $pdf = new DISI_Tickets_Report_PDF(
             DISI_PLUGIN_DIR . 'assets/images/disi-logo.png'
         );
-        $pdf->SetTitle('DISI Summit E-ticketing Report');
-        $pdf->SetAuthor('DISI Summit Portal');
+        $pdf->SetTitle(
+            DISI_Settings::brand()['event_name'] . ' E-ticketing Report'
+        );
+        $pdf->SetAuthor(DISI_Settings::product_name());
         $pdf->SetMargins(10, 10, 10);
         $pdf->SetAutoPageBreak(true, 14);
         $pdf->AddPage();
@@ -606,20 +608,24 @@ class DISI_Ticketing {
             ($registration->last_name ?? '')
         );
         $name = $name ?: 'Participant';
-        $logo = DISI_PLUGIN_URL . 'assets/images/disi-logo.png';
+        $brand = DISI_Settings::brand();
+        $event_name = $brand['event_name'];
+        $logo = !empty($brand['logo_url'])
+            ? $brand['logo_url']
+            : DISI_PLUGIN_URL . 'assets/images/disi-logo.png';
         $qr_code = self::qr_svg($ticket_url);
         $admit_count = self::admit_count($registration);
         $group_rows = self::email_group_detail_rows($registration);
 
         $message = '
         <html>
-        <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;color:#172b3b;">
-            <div style="max-width:720px;margin:30px auto;background:#fff;border-top:8px solid #ffc801;">
-                <div style="background:#172b3b;padding:24px;text-align:center;">
-                    <img src="' . esc_url($logo) . '" alt="DISI" style="max-width:190px;height:auto;">
+        <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;color:' . esc_attr($brand['secondary_color']) . ';">
+            <div style="max-width:720px;margin:30px auto;background:#fff;border-top:8px solid ' . esc_attr($brand['accent_color']) . ';">
+                <div style="background:' . esc_attr($brand['secondary_color']) . ';padding:24px;text-align:center;">
+                    <img src="' . esc_url($logo) . '" alt="' . esc_attr($brand['organization_name']) . '" style="max-width:190px;height:auto;">
                 </div>
                 <div style="padding:34px;">
-                    <h2 style="color:#157664;margin-top:0;">Your DISI Summit 2026 E-ticket</h2>
+                    <h2 style="color:' . esc_attr($brand['primary_color']) . ';margin-top:0;">Your ' . esc_html($event_name) . ' E-ticket</h2>
                     <p>Dear ' . esc_html($name) . ',</p>
                     <p>Your registration and payment have been confirmed. Present the attached ticket at the event entrance.</p>
                     <table cellpadding="8" style="width:100%;border-collapse:collapse;background:#f8faf9;">
@@ -634,7 +640,7 @@ class DISI_Ticketing {
                         ' . $qr_code . '
                     </div>
                     <p style="text-align:center;">
-                        <a href="' . esc_url($ticket_url) . '" style="display:inline-block;background:#ffc801;color:#172b3b;padding:13px 24px;text-decoration:none;font-weight:bold;">View E-ticket</a>
+                        <a href="' . esc_url($ticket_url) . '" style="display:inline-block;background:' . esc_attr($brand['accent_color']) . ';color:' . esc_attr($brand['secondary_color']) . ';padding:13px 24px;text-decoration:none;font-weight:bold;">View E-ticket</a>
                     </p>
                     <p style="font-size:13px;color:#64706e;">The QR code opens the secure electronic copy of this ticket. Keep the ticket private.</p>
                 </div>
@@ -644,11 +650,11 @@ class DISI_Ticketing {
 
         $sent = wp_mail(
             $registration->email,
-            'Your DISI Summit 2026 E-ticket',
+            'Your ' . $event_name . ' E-ticket',
             $message,
             [
                 'Content-Type: text/html; charset=UTF-8',
-                'From: DISI Summit 2026 <noreply@disisummit.org>'
+                'From: ' . $event_name . ' <' . (!empty($brand['email']) ? $brand['email'] : get_option('admin_email')) . '>'
             ],
             [$attachment]
         );
@@ -697,7 +703,7 @@ class DISI_Ticketing {
             DISI_PLUGIN_DIR . 'assets/images/disi-logo.png'
         );
         $pdf->SetTitle(self::ticket_number($registration));
-        $pdf->SetAuthor('DISI Summit Portal');
+        $pdf->SetAuthor(DISI_Settings::product_name());
         $pdf->AddPage();
         $pdf->ticket($registration, self::ticket_url($registration));
         $pdf->Output('F', $path);
@@ -756,7 +762,10 @@ class DISI_Ticketing {
         );
         $url = self::ticket_url($registration);
         $qr_code = self::qr_svg($url);
-        $logo = DISI_PLUGIN_URL . 'assets/images/disi-logo.png';
+        $brand = DISI_Settings::brand();
+        $logo = !empty($brand['logo_url'])
+            ? $brand['logo_url']
+            : DISI_PLUGIN_URL . 'assets/images/disi-logo.png';
         $admit_count = self::admit_count($registration);
         $group_fields = self::group_ticket_fields($registration, 4);
         $group_html = '';
@@ -769,9 +778,9 @@ class DISI_Ticketing {
         <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
         <title>' . esc_html(self::ticket_number($registration)) . '</title>
         <style>
-        body{margin:0;background:#eef2f1;font-family:Arial,sans-serif;color:#172b3b}
-        .ticket{max-width:760px;margin:28px auto;background:#fff;border-top:8px solid #ffc801;box-shadow:0 10px 30px rgba(23,43,59,.12)}
-        .head{background:#172b3b;padding:24px;text-align:center}.head img{max-width:190px;height:auto}
+        body{margin:0;background:#eef2f1;font-family:Arial,sans-serif;color:' . esc_html($brand['secondary_color']) . '}
+        .ticket{max-width:760px;margin:28px auto;background:#fff;border-top:8px solid ' . esc_html($brand['accent_color']) . ';box-shadow:0 10px 30px rgba(23,43,59,.12)}
+        .head{background:' . esc_html($brand['secondary_color']) . ';padding:24px;text-align:center}.head img{max-width:190px;height:auto}
         .body{padding:32px}.valid{display:inline-block;background:#dcfce7;color:#166534;padding:7px 12px;font-weight:700;border-radius:6px}
         .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:24px 0}
         .field{border:1px solid #dbe5e2;padding:13px}.label{font-size:12px;color:#687673;margin-bottom:6px}.value{font-weight:700;overflow-wrap:anywhere;white-space:pre-line}
@@ -779,9 +788,9 @@ class DISI_Ticketing {
         .note{font-size:13px;color:#687673;text-align:center;margin-top:16px}
         @media(max-width:600px){.ticket{margin:0}.body{padding:20px}.grid{grid-template-columns:1fr}}
         </style></head><body>
-        <main class="ticket"><div class="head"><img src="' . esc_url($logo) . '" alt="DISI"></div>
+        <main class="ticket"><div class="head"><img src="' . esc_url($logo) . '" alt="' . esc_attr($brand['organization_name']) . '"></div>
         <div class="body"><span class="valid">VALID E-TICKET</span>
-        <h1>DISI Summit 2026</h1>
+        <h1>' . esc_html($brand['event_name']) . '</h1>
         <div class="grid">
         ' . self::ticket_field('Ticket Number', self::ticket_number($registration)) .
         self::ticket_field('Registration Number', DISI_Registration_Manager::get_registration_number($registration)) .
@@ -1183,7 +1192,15 @@ class DISI_Ticket_PDF extends FPDF {
         $this->SetXY(47, 4.5);
         $this->SetTextColor(255, 255, 255);
         $this->SetFont('Helvetica', 'B', 15);
-        $this->Cell(104, 7, 'DISI SUMMIT 2026', 0, 1);
+        $event_name = strtoupper(DISI_Settings::brand()['event_name']);
+        $this->fit_font(
+            DISI_Exporter::pdf_text($event_name),
+            104,
+            15,
+            9,
+            'B'
+        );
+        $this->Cell(104, 7, DISI_Exporter::pdf_text($event_name), 0, 1);
         $this->SetX(47);
         $this->SetFont('Helvetica', '', 7.5);
         $this->SetTextColor(213, 224, 221);
@@ -1481,7 +1498,15 @@ class DISI_Tickets_Report_PDF extends FPDF {
         $this->SetXY(47, 6);
         $this->SetTextColor(255, 255, 255);
         $this->SetFont('Helvetica', 'B', 15);
-        $this->Cell(0, 7, 'DISI Summit 2026 E-ticketing Report', 0, 1);
+        $this->Cell(
+            0,
+            7,
+            DISI_Exporter::pdf_text(
+                DISI_Settings::brand()['event_name'] . ' E-ticketing Report'
+            ),
+            0,
+            1
+        );
         $this->SetX(47);
         $this->SetFont('Helvetica', '', 8);
         $this->SetTextColor(222, 231, 235);
@@ -1507,7 +1532,10 @@ class DISI_Tickets_Report_PDF extends FPDF {
         $this->Cell(
             0,
             6,
-            'DISI Summit Portal | E-ticketing | Page ' . $this->PageNo(),
+            DISI_Exporter::pdf_text(
+                DISI_Settings::product_name() .
+                ' | E-ticketing | Page ' . $this->PageNo()
+            ),
             0,
             0,
             'C'

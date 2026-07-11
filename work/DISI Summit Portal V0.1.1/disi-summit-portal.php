@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: DISI Summit Portal
+ * Plugin Name: Event Registration and Approval Plugin
  * Plugin URI: https://layer6.ng
- * Description: DISI Summit 2026 registration approval, pricing, payment notification, and form integration portal.
- * Version: 0.5.4
+ * Description: Commercial event registration approval, pricing, payment notification, e-ticketing, and form integration plugin.
+ * Version: 1.0.0
  * Author: Mustapha Mustapha
  * License: GPL2
  */

@@ -37,14 +37,17 @@ class DISI_Email {
             $registration->registration_type
         );
 
+        $brand = DISI_Settings::brand();
+        $event_name = $brand['event_name'];
+
         $message =
         self::email_shell(
-            'DISI Summit 2026 Registration Approved',
+            $event_name . ' Registration Approved',
             '
             <p>Dear ' . esc_html($name) . ',</p>
 
             <p>
-                Congratulations. Your DISI Summit 2026 registration
+                Congratulations. Your ' . esc_html($event_name) . ' registration
                 has been approved. Please proceed with payment to
                 complete your registration.
             </p>
@@ -88,7 +91,7 @@ class DISI_Email {
 
         return wp_mail(
             $registration->email,
-            'DISI Summit 2026 Registration Approved - Proceed With Payment',
+            $event_name . ' Registration Approved - Proceed With Payment',
             $message,
             self::headers()
         );
@@ -112,14 +115,18 @@ class DISI_Email {
             $registration->rejection_reason ?? ''
         );
 
+        $brand = DISI_Settings::brand();
+        $event_name = $brand['event_name'];
+        $organization_name = $brand['organization_name'];
+
         $message =
         self::email_shell(
-            'DISI Summit 2026 Registration Update',
+            $event_name . ' Registration Update',
             '
             <p>Dear ' . esc_html(self::recipient_name($registration)) . ',</p>
 
             <p>
-                Thank you for your interest in DISI Summit 2026.
+                Thank you for your interest in ' . esc_html($event_name) . '.
                 After reviewing your registration, we are unable to
                 approve it at this time.
             </p>
@@ -137,14 +144,14 @@ class DISI_Email {
 
             <p>
                 If you believe this was a mistake, please contact the
-                DISI Summit team for assistance.
+                ' . esc_html($organization_name) . ' team for assistance.
             </p>
             '
         );
 
         return wp_mail(
             $registration->email,
-            'DISI Summit 2026 Registration Update',
+            $event_name . ' Registration Update',
             $message,
             self::headers()
         );
@@ -155,22 +162,27 @@ class DISI_Email {
         $body
     ) {
 
-        $logo =
-        DISI_PLUGIN_URL .
-        'assets/images/disi-logo.png';
+        $brand = DISI_Settings::brand();
+        $logo = !empty($brand['logo_url'])
+            ? $brand['logo_url']
+            : DISI_PLUGIN_URL . 'assets/images/disi-logo.png';
+        $primary = $brand['primary_color'];
+        $secondary = $brand['secondary_color'];
+        $accent = $brand['accent_color'];
+        $organization_name = $brand['organization_name'];
 
         return '
         <html>
         <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
-            <div style="max-width:720px;margin:30px auto;background:#ffffff;border-radius:12px;overflow:hidden;border-top:8px solid #ffc801;">
-                <div style="background:#172b3b;padding:30px;text-align:center;">
-                    <img src="' . esc_url($logo) . '" alt="DISI" style="max-width:220px;height:auto;">
+            <div style="max-width:720px;margin:30px auto;background:#ffffff;border-radius:12px;overflow:hidden;border-top:8px solid ' . esc_attr($accent) . ';">
+                <div style="background:' . esc_attr($secondary) . ';padding:30px;text-align:center;">
+                    <img src="' . esc_url($logo) . '" alt="' . esc_attr($organization_name) . '" style="max-width:220px;height:auto;">
                 </div>
 
-                <div style="height:8px;background:linear-gradient(90deg,#157664 0%,#53965c 35%,#a5b73c 70%,#ffc801 100%);"></div>
+                <div style="height:8px;background:linear-gradient(90deg,' . esc_attr($primary) . ' 0%,' . esc_attr($accent) . ' 100%);"></div>
 
-                <div style="padding:40px;color:#172b3b;font-size:15px;line-height:1.6;">
-                    <h2 style="margin-top:0;color:#157664;">' . esc_html($title) . '</h2>
+                <div style="padding:40px;color:' . esc_attr($secondary) . ';font-size:15px;line-height:1.6;">
+                    <h2 style="margin-top:0;color:' . esc_attr($primary) . ';">' . esc_html($title) . '</h2>
                     ' . $body . '
                 </div>
             </div>
@@ -192,7 +204,7 @@ class DISI_Email {
         return '
         <p style="text-align:center;margin:40px 0;">
             <a href="' . esc_url($payment_link) . '"
-            style="background:#ffc801;color:#172b3b;text-decoration:none;padding:14px 28px;border-radius:8px;display:inline-block;font-weight:bold;">
+            style="background:' . esc_attr(DISI_Settings::brand()['accent_color']) . ';color:' . esc_attr(DISI_Settings::brand()['secondary_color']) . ';text-decoration:none;padding:14px 28px;border-radius:8px;display:inline-block;font-weight:bold;">
                 Pay Now
             </a>
         </p>
@@ -235,9 +247,15 @@ class DISI_Email {
 
     private static function headers() {
 
+        $brand = DISI_Settings::brand();
+        $from_name = $brand['event_name'];
+        $from_email = !empty($brand['email'])
+            ? $brand['email']
+            : get_option('admin_email');
+
         return [
             'Content-Type: text/html; charset=UTF-8',
-            'From: DISI Summit 2026 <noreply@disisummit.org>'
+            'From: ' . $from_name . ' <' . $from_email . '>'
         ];
     }
 }

@@ -31,6 +31,71 @@ if (
             $_POST['sponsorship_form'] ?? 0
         ),
 
+        'organization_name' => sanitize_text_field(
+            wp_unslash($_POST['organization_name'] ?? '')
+        ),
+
+        'event_name' => sanitize_text_field(
+            wp_unslash($_POST['event_name'] ?? '')
+        ),
+
+        'organization_email' => sanitize_email(
+            wp_unslash($_POST['organization_email'] ?? '')
+        ),
+
+        'organization_phone' => sanitize_text_field(
+            wp_unslash($_POST['organization_phone'] ?? '')
+        ),
+
+        'organization_website' => esc_url_raw(
+            wp_unslash($_POST['organization_website'] ?? '')
+        ),
+
+        'organization_address' => sanitize_textarea_field(
+            wp_unslash($_POST['organization_address'] ?? '')
+        ),
+
+        'organization_logo_url' => esc_url_raw(
+            wp_unslash($_POST['organization_logo_url'] ?? '')
+        ),
+
+        'primary_color' => preg_match(
+            '/^#[0-9a-fA-F]{6}$/',
+            $_POST['primary_color'] ?? ''
+        )
+            ? sanitize_hex_color($_POST['primary_color'])
+            : '#157664',
+
+        'secondary_color' => preg_match(
+            '/^#[0-9a-fA-F]{6}$/',
+            $_POST['secondary_color'] ?? ''
+        )
+            ? sanitize_hex_color($_POST['secondary_color'])
+            : '#172b3b',
+
+        'accent_color' => preg_match(
+            '/^#[0-9a-fA-F]{6}$/',
+            $_POST['accent_color'] ?? ''
+        )
+            ? sanitize_hex_color($_POST['accent_color'])
+            : '#ffc801',
+
+        'commercial_purchase_url' => esc_url_raw(
+            wp_unslash($_POST['commercial_purchase_url'] ?? '')
+        ),
+
+        'commercial_license_endpoint' => esc_url_raw(
+            wp_unslash($_POST['commercial_license_endpoint'] ?? '')
+        ),
+
+        'commercial_price' => sanitize_text_field(
+            wp_unslash($_POST['commercial_price'] ?? '')
+        ),
+
+        'commercial_currency' => sanitize_text_field(
+            wp_unslash($_POST['commercial_currency'] ?? '')
+        ),
+
         'paystack_secret_key' => !empty($_POST['paystack_secret_key'])
             ? sanitize_text_field(
                 wp_unslash($_POST['paystack_secret_key'])
@@ -135,7 +200,7 @@ $amount_fields = [
 
 <div class="wrap">
 
-    <h1>DISI Portal Integrations</h1>
+    <h1>Event Registration Integrations</h1>
 
     <form method="post">
 
@@ -146,6 +211,205 @@ $amount_fields = [
         ?>
 
         <table class="form-table">
+
+            <tr>
+                <th colspan="2">
+                    <h2>Organization Branding</h2>
+                </th>
+            </tr>
+
+            <tr>
+                <th>Organization Name</th>
+                <td>
+                    <input
+                        type="text"
+                        name="organization_name"
+                        class="regular-text"
+                        value="<?php echo esc_attr($config['organization_name'] ?? ''); ?>"
+                        placeholder="Example: Acme Events"
+                    >
+                </td>
+            </tr>
+
+            <tr>
+                <th>Event Name</th>
+                <td>
+                    <input
+                        type="text"
+                        name="event_name"
+                        class="regular-text"
+                        value="<?php echo esc_attr($config['event_name'] ?? ''); ?>"
+                        placeholder="Example: Annual Leadership Summit"
+                    >
+                </td>
+            </tr>
+
+            <tr>
+                <th>Organization Email</th>
+                <td>
+                    <input
+                        type="email"
+                        name="organization_email"
+                        class="regular-text"
+                        value="<?php echo esc_attr($config['organization_email'] ?? ''); ?>"
+                        placeholder="events@example.com"
+                    >
+                </td>
+            </tr>
+
+            <tr>
+                <th>Organization Phone</th>
+                <td>
+                    <input
+                        type="text"
+                        name="organization_phone"
+                        class="regular-text"
+                        value="<?php echo esc_attr($config['organization_phone'] ?? ''); ?>"
+                        placeholder="+234..."
+                    >
+                </td>
+            </tr>
+
+            <tr>
+                <th>Organization Website</th>
+                <td>
+                    <input
+                        type="url"
+                        name="organization_website"
+                        class="regular-text"
+                        value="<?php echo esc_attr($config['organization_website'] ?? ''); ?>"
+                        placeholder="<?php echo esc_attr(home_url('/')); ?>"
+                    >
+                </td>
+            </tr>
+
+            <tr>
+                <th>Organization Address</th>
+                <td>
+                    <textarea
+                        name="organization_address"
+                        class="large-text"
+                        rows="3"
+                    ><?php echo esc_textarea($config['organization_address'] ?? ''); ?></textarea>
+                </td>
+            </tr>
+
+            <tr>
+                <th>Logo URL</th>
+                <td>
+                    <input
+                        type="url"
+                        name="organization_logo_url"
+                        class="regular-text"
+                        value="<?php echo esc_attr($config['organization_logo_url'] ?? ''); ?>"
+                        placeholder="<?php echo esc_attr(DISI_PLUGIN_URL . 'assets/images/disi-logo.png'); ?>"
+                    >
+                    <p class="description">
+                        Used in email and public ticket layouts. Leave blank to use the bundled plugin logo.
+                    </p>
+                </td>
+            </tr>
+
+            <tr>
+                <th>Brand Colors</th>
+                <td>
+                    <label>
+                        Primary
+                        <input
+                            type="color"
+                            name="primary_color"
+                            value="<?php echo esc_attr($config['primary_color'] ?? '#157664'); ?>"
+                        >
+                    </label>
+                    &nbsp;
+                    <label>
+                        Secondary
+                        <input
+                            type="color"
+                            name="secondary_color"
+                            value="<?php echo esc_attr($config['secondary_color'] ?? '#172b3b'); ?>"
+                        >
+                    </label>
+                    &nbsp;
+                    <label>
+                        Accent
+                        <input
+                            type="color"
+                            name="accent_color"
+                            value="<?php echo esc_attr($config['accent_color'] ?? '#ffc801'); ?>"
+                        >
+                    </label>
+                </td>
+            </tr>
+
+            <tr>
+                <th colspan="2">
+                    <h2>Commercial Purchase and Licensing</h2>
+                </th>
+            </tr>
+
+            <tr>
+                <th>Purchase / Checkout URL</th>
+                <td>
+                    <input
+                        type="url"
+                        name="commercial_purchase_url"
+                        class="regular-text"
+                        value="<?php echo esc_attr($config['commercial_purchase_url'] ?? ''); ?>"
+                        placeholder="https://your-store.example.com/event-registration-plugin"
+                    >
+                    <p class="description">
+                        Link buyers to a hosted checkout that can issue activation automatically after payment.
+                    </p>
+                </td>
+            </tr>
+
+            <tr>
+                <th>License API Endpoint</th>
+                <td>
+                    <input
+                        type="url"
+                        name="commercial_license_endpoint"
+                        class="regular-text"
+                        value="<?php echo esc_attr($config['commercial_license_endpoint'] ?? ''); ?>"
+                        placeholder="https://your-store.example.com/wp-json/license/v1/activate"
+                    >
+                    <p class="description">
+                        Reserved for a future automated license server. Do not place store secret keys in this plugin.
+                    </p>
+                </td>
+            </tr>
+
+            <tr>
+                <th>Suggested Product Price</th>
+                <td>
+                    <input
+                        type="text"
+                        name="commercial_price"
+                        class="small-text"
+                        value="<?php echo esc_attr($config['commercial_price'] ?? '19'); ?>"
+                    >
+                    <select name="commercial_currency">
+                        <?php foreach (['USD', 'NGN', 'GBP', 'EUR'] as $currency) : ?>
+                            <option
+                                value="<?php echo esc_attr($currency); ?>"
+                                <?php selected($config['commercial_currency'] ?? 'USD', $currency); ?>
+                            >
+                                <?php echo esc_html($currency); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="description">
+                        Recommended launch price: $19 one-time early access, then $29-$49 yearly once automatic updates and hosted licensing are ready.
+                    </p>
+                </td>
+            </tr>
+
+            <tr>
+                <th colspan="2">
+                    <h2>Form and Payment Integrations</h2>
+                </th>
+            </tr>
 
             <tr>
 

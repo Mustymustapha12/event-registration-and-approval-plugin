@@ -188,8 +188,8 @@ class DISI_Exporter {
         $pdf = new DISI_Registrations_PDF(
             DISI_PLUGIN_DIR . 'assets/images/disi-logo.png'
         );
-        $pdf->SetTitle('DISI Summit Registrations');
-        $pdf->SetAuthor('DISI Summit Portal');
+        $pdf->SetTitle(DISI_Settings::brand()['event_name'] . ' Registrations');
+        $pdf->SetAuthor(DISI_Settings::product_name());
         $pdf->SetMargins(10, 10, 10);
         $pdf->SetAutoPageBreak(true, 14);
         $pdf->AddPage();
@@ -214,7 +214,7 @@ class DISI_Exporter {
 
         $pdf->Output(
             'D',
-            'disi-registrations-' . gmdate('Y-m-d-His') . '.pdf'
+            'event-registrations-' . gmdate('Y-m-d-His') . '.pdf'
         );
         exit;
     }
@@ -349,7 +349,10 @@ class DISI_Registrations_PDF extends FPDF {
         $this->Cell(
             0,
             7,
-            'DISI Summit 2026 Registration Report',
+            DISI_Exporter::pdf_text(
+                DISI_Settings::brand()['event_name'] .
+                ' Registration Report'
+            ),
             0,
             1
         );
@@ -380,7 +383,10 @@ class DISI_Registrations_PDF extends FPDF {
         $this->Cell(
             0,
             6,
-            'DISI Summit Portal | Confidential | Page ' . $this->PageNo(),
+            DISI_Exporter::pdf_text(
+                DISI_Settings::product_name() .
+                ' | Confidential | Page ' . $this->PageNo()
+            ),
             0,
             0,
             'C'

@@ -1,7 +1,7 @@
-DISI Summit Portal
-Version: 0.5.4
+Event Registration and Approval Plugin
+Version: 1.0.0
 
-This plugin manages DISI Summit 2026 registrations inside WordPress.
+This plugin manages event registrations inside WordPress for commercial use.
 
 Main features:
 - Captures registrations from a selected form provider, selected registration form, and optional selected group booking form.
@@ -18,9 +18,9 @@ Main features:
 - Workshop Payment Amount and Exhibition Payment Amount are treated as add-ons to the selected registration type amount for subsequent usage.
 - Total Amount to Pay is calculated as registration type amount plus workshop and exhibition add-on amounts when selected in the submitted form.
 - Admins can approve registrations from the registration detail page.
-- Approval emails notify recipients that their DISI Summit 2026 registration has been approved and include registration number, registration type, registration amount, workshop add-on amount, exhibition add-on amount, total amount, Paystack payment button, and fallback Paystack link.
+- Approval emails notify recipients that their event registration has been approved and include registration number, registration type, registration amount, workshop add-on amount, exhibition add-on amount, total amount, Paystack payment button, and fallback Paystack link.
 - Admins can reject registrations from the registration detail page and must provide a rejection reason.
-- Rejection emails include the DISI Summit 2026 branding, registration number, and rejection reason.
+- Rejection emails include the configured event branding, registration number, and rejection reason.
 - Registration details hide internal form metadata fields such as Fluent Form embedded post ID, Fluentform nonce, and WordPress HTTP referer.
 - Registrations can be removed automatically when supported source form entries are deleted.
 - Integration amount fields display thousands separators while remaining usable for pricing calculations.
@@ -48,7 +48,7 @@ Main features:
 - CSV exports include stored registration, source, approval, payment, and all submitted form fields.
 - PDF exports include a complete readable detail section for every matching registration.
 - PDF exports use a polished landscape table so multiple registrations fit on each page.
-- PDF pages include the DISI logo, branded report banner, export filters, financial summary, repeating table headings, alternating rows, and page numbers.
+- PDF pages include the bundled logo, branded report banner, export filters, financial summary, repeating table headings, alternating rows, and page numbers.
 - Each PDF table row includes registration identity, contact, type, approval status, payment status, amount, submission date, source data, payment reference, fee breakdown, and every submitted form field.
 - Dashboard amount cards use a smaller type size and one decimal place for large totals.
 - Active registration, workshop, exhibition, and expected totals exclude rejected registrations.
@@ -71,14 +71,14 @@ Main features:
 - E-ticketing lists support 10, 25, or 50 participants per page with pagination and matching record totals.
 - Filtered E-ticketing records can be exported as CSV or a branded landscape PDF report.
 - Each WordPress installation now requires a site-specific owner approval key before portal operations are enabled.
-- The plugin uses a custom manage_disi_portal capability so role editor plugins can grant DISI Portal access to non-administrator roles.
+- The plugin uses a custom manage_disi_portal capability so role editor plugins can grant Event Registration access to non-administrator roles.
 - License approval is tied to the normalized WordPress site URL and a unique local installation ID.
 - License verification is performed locally with a signed key and does not rely on a subscription server, recurring network request, or expiration date.
 - Unapproved installations retain access only to the License page while registration capture, Paystack, exports, E-ticketing, and public ticket endpoints remain inactive.
 - The private license signing key and owner approval tool are not included in the installable plugin ZIP.
 
 Owner approval workflow:
-1. The site administrator opens DISI Portal > License and sends the displayed request code to the plugin owner.
+1. The site administrator opens Event Registration > License and sends the displayed request code to the plugin owner or automated checkout system.
 2. The plugin owner runs: php owner-tools/generate-license.php 'DISI-REQ-...'
 3. The generated DISI-LIC activation key is pasted into the site's License page.
 4. Once approved, normal plugin behavior continues without remote license checks or expiry interruptions.
@@ -90,13 +90,30 @@ Owner approval workflow:
 - PDF registration exports include ticket number and scan history when a ticket has been issued.
 - CSV values are protected against spreadsheet formula execution.
 - PDF generation is bundled through FPDF 1.86 and does not require a server PDF extension.
-- The plugin applies DISI branding colors:
+- The plugin applies configurable branding colors:
   Dark Azure #172b3b
   Dark Turquoise #157664
   Gray Green #53965c
   Yellow Green #a5b73c
   Yellow #ffc801
-- DISI logo assets are bundled in assets/images.
+- Default logo assets are bundled in assets/images.
 
 Upload behavior:
-- The plugin package uses a stable internal plugin folder so uploading newer versions replaces the previously installed DISI Summit Portal instead of installing a separate plugin.
+- Version 1.0.0 packages the commercial plugin inside the event-registration-and-approval-plugin folder for new product installs.
+
+Version 1.0.0 update:
+- Commercial product name changed to Event Registration and Approval Plugin.
+- Integration page now includes Organization Branding settings:
+  organization name, event name, email, phone, website, address, logo URL,
+  primary color, secondary color, and accent color.
+- Integration page now includes Commercial Purchase and Licensing settings:
+  purchase/checkout URL, future license API endpoint, suggested product price,
+  and product currency.
+- Dashboard, approval emails, rejection emails, e-ticket emails, public tickets,
+  login branding, and exported PDF titles now use configured organization/event
+  details where possible.
+- Suggested launch pricing is set to $19 one-time early access, with $29-$49
+  yearly recommended later after hosted automatic updates and license server
+  automation are ready.
+- Automatic buy-and-unlock is structured around an external checkout/licensing
+  endpoint so store secret keys are not embedded in the distributed plugin.

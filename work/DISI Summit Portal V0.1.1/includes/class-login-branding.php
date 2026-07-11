@@ -42,11 +42,14 @@ class DISI_Login_Branding {
 
     public function url() {
 
-        return 'https://disisummit.org';
+        $brand = DISI_Settings::brand();
+        return !empty($brand['website'])
+            ? $brand['website']
+            : home_url('/');
     }
 
     public function title() {
 
-        return 'DISI Summit';
+        return DISI_Settings::brand()['organization_name'];
     }
 }

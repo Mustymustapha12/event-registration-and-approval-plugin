@@ -25,10 +25,16 @@ if (
 }
 
 $is_active = DISI_License::is_active();
+$purchase_url = class_exists('DISI_Settings')
+    ? DISI_Settings::purchase_url()
+    : '';
+$product_name = class_exists('DISI_Settings')
+    ? DISI_Settings::product_name()
+    : 'Event Registration and Approval Plugin';
 ?>
 
 <div class="wrap disi-license-page">
-    <h1>DISI Portal License</h1>
+    <h1><?php echo esc_html($product_name); ?> License</h1>
 
     <?php if ($notice) : ?>
         <div class="notice <?php echo esc_attr($notice_class); ?>">
@@ -49,8 +55,26 @@ $is_active = DISI_License::is_active();
 
     <?php if (!$is_active) : ?>
         <p>
-            Send the request code below to the plugin owner. Paste the
-            activation key you receive into the activation field.
+            Buy access from the official checkout page, then activate this
+            WordPress installation with the key issued after payment.
+        </p>
+
+        <?php if (!empty($purchase_url)) : ?>
+            <p>
+                <a
+                    class="button button-primary"
+                    href="<?php echo esc_url($purchase_url); ?>"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    Buy Access
+                </a>
+            </p>
+        <?php endif; ?>
+
+        <p>
+            If your checkout system requests a site code, use the request
+            code below.
         </p>
 
         <table class="form-table">
