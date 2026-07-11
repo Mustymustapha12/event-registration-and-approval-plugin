@@ -6,10 +6,10 @@ and form-provider integration.
 
 ## Latest Release
 
-Version `1.0.0`
+Version `1.0.1`
 
 Installable package:
-`outputs/event-registration-approval-plugin-v1.0.0.zip`
+`outputs/event-registration-approval-plugin-v1.0.1.zip`
 
 ## Source
 
@@ -21,11 +21,18 @@ ZIP uses the commercial plugin folder `event-registration-and-approval-plugin`.
 
 ## Site Approval
 
-Version `1.0.0` keeps signed site approval and adds a purchase/checkout URL
+Version `1.0.1` keeps signed site approval and adds a purchase/checkout URL
 field so a hosted checkout or future license server can issue access
 automatically after payment. The owner-only generator is documented in
 `owner-tools/README.md`. Its private signing key is excluded from Git and from
 the installable plugin package.
+
+## Version 1.0.1
+
+- Fixes repeated WordPress upgrade warnings from `wp-admin/includes/upgrade.php`
+  by avoiding `dbDelta()` during normal plugin upgrade checks.
+- Keeps table creation and in-place schema upgrades working through direct
+  `CREATE TABLE IF NOT EXISTS` plus manual column/index upgrades.
 
 ## Version 1.0.0
 

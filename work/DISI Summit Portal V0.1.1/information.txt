@@ -1,5 +1,5 @@
 Event Registration and Approval Plugin
-Version: 1.0.0
+Version: 1.0.1
 
 This plugin manages event registrations inside WordPress for commercial use.
 
@@ -117,3 +117,8 @@ Version 1.0.0 update:
   automation are ready.
 - Automatic buy-and-unlock is structured around an external checkout/licensing
   endpoint so store secret keys are not embedded in the distributed plugin.
+
+Version 1.0.1 update:
+- Fixes repeated WordPress upgrade warnings from wp-admin/includes/upgrade.php
+  by replacing repeated dbDelta table checks with direct CREATE TABLE IF NOT
+  EXISTS statements and the existing manual schema upgrade logic.

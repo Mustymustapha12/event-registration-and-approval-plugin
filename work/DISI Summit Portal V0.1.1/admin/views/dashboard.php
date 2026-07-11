@@ -45,7 +45,7 @@ DISI_Registration_Manager::amount_totals();
 
 <div class="wrap">
 
-<h1>Event Registration and Approval Plugin V1.0.0</h1>
+<h1>Event Registration and Approval Plugin V1.0.1</h1>
 
 <div class="disi-dashboard-grid">
 

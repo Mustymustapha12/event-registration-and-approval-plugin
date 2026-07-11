@@ -48,7 +48,7 @@ class DISI_Admin_Menu {
 
         add_menu_page(
             $licensed
-                ? 'Event Registration and Approval Plugin V1.0.0'
+                ? 'Event Registration and Approval Plugin V1.0.1'
                 : 'Event Registration Approval Required',
             'Event Registration',
             DISI_MANAGE_CAPABILITY,
