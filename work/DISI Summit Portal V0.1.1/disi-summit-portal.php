@@ -3,7 +3,7 @@
  * Plugin Name: Event Registration and Approval Plugin
  * Plugin URI: https://layer6.ng
  * Description: Commercial event registration approval, pricing, payment notification, e-ticketing, and form integration plugin.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Mustapha Mustapha
  * License: GPL2
  */

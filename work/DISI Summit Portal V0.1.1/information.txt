@@ -1,5 +1,5 @@
 Event Registration and Approval Plugin
-Version: 1.0.1
+Version: 1.0.2
 
 This plugin manages event registrations inside WordPress for commercial use.
 
@@ -122,3 +122,14 @@ Version 1.0.1 update:
 - Fixes repeated WordPress upgrade warnings from wp-admin/includes/upgrade.php
   by replacing repeated dbDelta table checks with direct CREATE TABLE IF NOT
   EXISTS statements and the existing manual schema upgrade logic.
+
+Version 1.0.2 update:
+- Adds a Paystack webhook endpoint at
+  /wp-admin/admin-post.php?action=disi_paystack_webhook with Paystack signature
+  verification.
+- Integration page now displays the exact Paystack callback and webhook URLs
+  to copy into the Paystack Dashboard.
+- Accepts successful Paystack payments where customer-borne Paystack fees make
+  the paid amount higher than the registration amount.
+- Keeps protection against underpayment by rejecting transactions where Paystack
+  reports less than the expected registration amount.

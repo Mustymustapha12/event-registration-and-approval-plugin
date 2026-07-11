@@ -6,10 +6,10 @@ and form-provider integration.
 
 ## Latest Release
 
-Version `1.0.1`
+Version `1.0.2`
 
 Installable package:
-`outputs/event-registration-approval-plugin-v1.0.1.zip`
+`outputs/event-registration-approval-plugin-v1.0.2.zip`
 
 ## Source
 
@@ -21,11 +21,21 @@ ZIP uses the commercial plugin folder `event-registration-and-approval-plugin`.
 
 ## Site Approval
 
-Version `1.0.1` keeps signed site approval and adds a purchase/checkout URL
+Version `1.0.2` keeps signed site approval and adds a purchase/checkout URL
 field so a hosted checkout or future license server can issue access
 automatically after payment. The owner-only generator is documented in
 `owner-tools/README.md`. Its private signing key is excluded from Git and from
 the installable plugin package.
+
+## Version 1.0.2
+
+- Adds Paystack webhook support with signature verification.
+- Shows read-only Paystack callback and webhook URLs on the Integration page.
+- Accepts successful Paystack payments where Paystack charges the customer more
+  than the expected registration amount because of customer-borne fees.
+- Still rejects underpayments where Paystack reports less than the expected
+  registration amount.
+- Keeps the v1.0.1 database upgrade warning fix.
 
 ## Version 1.0.1
 
